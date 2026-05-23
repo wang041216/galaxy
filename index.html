@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy Explorer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #060818;
+    color: #fff;
+    font-family: 'Georgia', serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── 星空背景画布 ── */
+  #starCanvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+
+  /* ── 节点层 ── */
+  #nodes-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ── 节点元素 ── */
+  .node {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    pointer-events: all;
+    transition: transform 0.2s ease;
+    animation: nodePulse 2.5s ease-in-out infinite;
+  }
+
+  .node:hover {
+    transform: translate(-50%, -50%) scale(1.5);
+    animation: none;
+    z-index: 1;
+  }
+
+  @keyframes nodePulse {
+    0%, 100% { box-shadow: 0 0 6px 2px var(--c); }
+    50%       { box-shadow: 0 0 18px 6px var(--c); }
+  }
+
+  .node-label {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 12px;
+    pointer-events: none;
+    letter-spacing: 1px;
+  }
+
+  /* ── Sun special style ── */
+  .node-sun {
+    background: radial-gradient(circle at 38% 38%, #fff9d0, #ffdd33 55%, #ff8800) !important;
+    animation: sunPulse 3s ease-in-out infinite !important;
+  }
+  .node-bh {
+    background: transparent !important;
+    box-shadow: none !important;
+    animation: none !important;
+    border: 1.5px solid rgba(180, 90, 255, 0.55) !important;
+    border-radius: 50%;
+  }
+
+  @keyframes sunPulse {
+    0%, 100% { box-shadow: 0 0 22px 8px #ffcc00, 0 0 55px 22px rgba(255,180,0,0.28); }
+    50%       { box-shadow: 0 0 38px 14px #ffcc00, 0 0 90px 38px rgba(255,180,0,0.42); }
+  }
+
+  /* ── 望远镜暗色遮罩 ── */
+  #telescope-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  /* ── 隐藏层（仅望远镜模式可见）── */
+  #hidden-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  #hidden-layer.active { visibility: visible; }
+
+  /* 隐藏节点样式 */
+  .h-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #ffccff;
+    font-size: 13px;
+  }
+
+  .h-node .h-dot {
+    width: 10px;
+    height: 10px;
+    background: #dd88ff;
+    border-radius: 50%;
+    margin: 0 auto 5px;
+    box-shadow: 0 0 10px 3px #aa44ff;
+    animation: nodePulse 1.8s ease-in-out infinite;
+    --c: #aa44ff;
+  }
+
+  .h-node .h-label {
+    text-shadow: 0 0 8px #ff88ff;
+  }
+
+  .h-node .h-sub {
+    font-size: 11px;
+    opacity: 0.65;
+    margin-top: 3px;
+    color: #ddaaff;
+  }
+
+  /* ── 望远镜镜头圆圈 ── */
+  #telescope-ring {
+    position: fixed;
+    border-radius: 50%;
+    border: 2px solid rgba(140, 210, 255, 0.75);
+    box-shadow:
+      0 0 14px rgba(100, 180, 255, 0.5),
+      inset 0 0 30px rgba(100, 180, 255, 0.06);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  #telescope-ring.active { opacity: 1; }
+
+  /* ── Tooltip ── */
+  #tooltip {
+    position: fixed;
+    background: rgba(8, 14, 40, 0.92);
+    border: 1px solid rgba(100, 160, 255, 0.45);
+    color: #aaddff;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.15s;
+    max-width: 220px;
+    backdrop-filter: blur(4px);
+  }
+
+  #tooltip.show { opacity: 1; }
+
+  /* ── 弹窗遮罩 ── */
+  #modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 20, 0.72);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(5px);
+  }
+
+  #modal-bg.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── 弹窗卡片 ── */
+  #modal-card {
+    background: linear-gradient(140deg, rgba(8,14,45,0.97), rgba(18,8,50,0.97));
+    border: 1px solid rgba(100, 155, 255, 0.35);
+    border-radius: 16px;
+    padding: 32px 36px;
+    width: min(480px, 90vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 0 50px rgba(80, 120, 255, 0.25);
+    position: relative;
+  }
+
+  #modal-card h2 {
+    font-size: 21px;
+    color: #88ccff;
+    margin-bottom: 14px;
+    text-shadow: 0 0 12px rgba(100, 180, 255, 0.4);
+    letter-spacing: 1px;
+  }
+
+  #modal-card .body-text {
+    line-height: 1.8;
+    font-size: 15px;
+    color: #c0d8f0;
+    margin-bottom: 14px;
+  }
+
+  #modal-card img {
+    width: 100%;
+    border-radius: 8px;
+    margin: 10px 0;
+    display: block;
+  }
+
+  #modal-card a {
+    color: #77aaff;
+    font-size: 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(100, 160, 255, 0.3);
+    padding-bottom: 1px;
+  }
+
+  #modal-card a:hover { color: #aaccff; }
+
+  #btn-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: #7799bb;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  #btn-close:hover { color: #fff; }
+
+  /* ── Professor modal — methods ── */
+  .modal-week {
+    font-size: 13px;
+    color: #7799bb;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .modal-section {
+    margin-bottom: 14px;
+  }
+  .modal-section-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #6688aa;
+    margin-bottom: 7px;
+  }
+  .modal-section-value {
+    font-size: 14px;
+  }
+  .methods-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .method-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid color-mix(in srgb, var(--mc) 45%, transparent);
+    border-radius: 20px;
+    padding: 5px 12px 5px 8px;
+    font-size: 13px;
+    color: #d8e8ff;
+  }
+  .moon-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 5px var(--mc, #fff);
+  }
+
+  /* orbit planet labels always visible */
+  .node-orbit .node-label { opacity: 1; }
+
+  /* score bars */
+  .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .score-label { font-size: 11px; color: #7799bb; width: 130px; flex-shrink: 0; }
+  .score-track { flex: 1; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .score-fill  { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .score-num   { font-size: 11px; color: #aac; width: 28px; text-align: right; flex-shrink: 0; }
+
+  /* ── 控制按钮 ── */
+  #controls {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 15;
+  }
+
+  #btn-telescope {
+    background: rgba(8, 16, 45, 0.82);
+    border: 1px solid rgba(100, 160, 255, 0.45);
+    color: #88bbff;
+    padding: 10px 20px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 1px;
+    backdrop-filter: blur(6px);
+    transition: all 0.2s;
+  }
+
+  #btn-telescope:hover {
+    background: rgba(20, 40, 90, 0.82);
+    border-color: #88ccff;
+    color: #cce8ff;
+  }
+
+  #btn-telescope.active {
+    background: rgba(20, 55, 100, 0.92);
+    border-color: #55aaff;
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(80, 160, 255, 0.35);
+  }
+
+  /* ── 页面标题 ── */
+  #page-title {
+    position: fixed;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #page-title h1 {
+    font-size: 26px;
+    letter-spacing: 6px;
+    color: #aaddff;
+    text-shadow: 0 0 18px rgba(100, 180, 255, 0.55);
+  }
+
+  #page-title p {
+    font-size: 12px;
+    color: rgba(140, 175, 220, 0.5);
+    letter-spacing: 3px;
+    margin-top: 4px;
+  }
+
+  /* ── 左下角操作提示 ── */
+  #hint {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 5;
+    color: rgba(120, 160, 210, 0.45);
+    font-size: 12px;
+    pointer-events: none;
+    line-height: 1.9;
+  }
+</style>
+</head>
+<body>
+
+<!-- Star background canvas -->
+<canvas id="starCanvas"></canvas>
+
+<!-- Visible node layer -->
+<div id="nodes-layer"></div>
+
+<!-- Telescope dark overlay -->
+<div id="telescope-overlay"></div>
+
+<!-- Hidden layer: only visible through the telescope -->
+<div id="hidden-layer"></div>
+
+<!-- Telescope lens ring (visual only) -->
+<div id="telescope-ring"></div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- Detail modal -->
+<div id="modal-bg">
+  <div id="modal-card">
+    <button id="btn-close">×</button>
+    <h2 id="modal-title"></h2>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Telescope toggle -->
+<div id="controls">
+  <button id="btn-telescope">🔭 Telescope Mode</button>
+</div>
+
+<!-- Usage hint -->
+<div id="hint">
+  Hover a node: tooltip &nbsp;|&nbsp; Click a node: details<br>
+  🔭 Telescope Mode: reveal hidden content
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  ★ NODE CONFIG — edit or add nodes here ★
+//
+//  Fields:
+//    x, y       — position as % of page (0–100). x:50 y:50 = center
+//    label      — text shown above the node
+//    color      — node color (hex)
+//    size       — node radius (px)
+//    tooltip    — short text shown on hover
+//    detail     — card shown on click
+//      .title   — card heading
+//      .body    — main text
+//      .image   — image URL (leave "" to hide)
+//      .link    — external link (leave "" to hide)
+// ═══════════════════════════════════════════════════════════════════
+const NODES = [
+  {
+    x: 88, y: 12,
+    label: "Black Hole",
+    color: "#9955ff",
+    size: 44,
+    isBlackHole: true,
+    tooltip: "Where gravity is so strong not even light can escape",
+    detail: {
+      title: "Black Hole",
+      body: "A black hole is a region of spacetime where gravity is so intense that nothing — not even light — can escape once it crosses the event horizon. The first image of a black hole (M87*) was captured by the Event Horizon Telescope in 2019.",
+      image: "",
+      link: "https://en.wikipedia.org/wiki/Black_hole"
+    }
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+//  ★ CENTRAL SUN — the body at the center of the page ★
+// ═══════════════════════════════════════════════════════════════════
+const SUN = {
+  label: "Gender & Sex",
+  color: "#ffdd33",
+  size: 42,
+  tooltip: "The central research field — click to explore",
+  detail: {
+    title: "Gender & Sexuality Studies",
+    body: "This visualization maps the research network of professors in the field of Gender & Sexuality Studies.\n\nPlanets = Professors\nMoons = Methodologies / Sources of Evidence\nThermal Energy Gradient = Modes of Conceptualization\n(Theory → Outward-facing Scholarship → Practice)\nStars = Dominant Culture\nBlack Hole = Hegemonic Systems (Hetero & cis normativity)\nDark Matter = Discursive Power\nMeteorites = Differing Perspectives\n\nHover to preview — click for full detail.",
+    image: "",
+    link: ""
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  ★ ORBIT PLANETS — ordered Week 1 (inner) → Week 8 (outer) ★
+//
+//  orbitFrac : orbit radius as a fraction of min(windowW, windowH)
+//  speed     : angular speed in radians/second
+//  angle0    : starting angle in radians
+//  belt      : Sphere of Influence label (null = none)
+//  beltColor : color of the sphere-of-influence ring
+// ═══════════════════════════════════════════════════════════════════
+const ORBIT_PLANETS = [
+  // ── idx 0 · Briggs · Week 6 · innermost (Theory) ─────────────
+  {
+    orbitFrac: 0.14, speed: 0.14, angle0: 0.00,
+    label: "Briggs", color: "#ff7788", size: 8,
+    belt: "Theory", beltColor: "#ff7755",
+    toxicity: 3, gravity: 8,
+    tooltip: "Dr. Ray Briggs — Theory · Philosophy · Podcast",
+    detail: {
+      title: "Dr. Ray Briggs",
+      body: "Week 6 | April 28\n\nThermal Zone: Theory\n\nMethodologies (Moons): Philosophy · Podcast",
+      image: "", link: ""
+    }
+  },
+  // ── idx 1 · Flatley · Week 5 (Theory) ────────────────────────
+  {
+    orbitFrac: 0.19, speed: 0.10, angle0: 2.40,
+    label: "Flatley", color: "#f088d0", size: 8,
+    belt: "Theory", beltColor: "#ff7755",
+    toxicity: 7, gravity: 2,
+    tooltip: "Dr. Johnathan Flatley — Theory · Comparatism · Art History",
+    detail: {
+      title: "Dr. Johnathan Flatley",
+      body: "Week 5 | April 21\n\nThermal Zone: Theory\n\nMethodologies (Moons): Comparatism · Art History",
+      image: "", link: ""
+    }
+  },
+  // ── idx 2 · Parsard · Week 3 (Theory, a bit outward-facing) ──
+  {
+    orbitFrac: 0.23, speed: 0.07, angle0: 4.80,
+    label: "Parsard", color: "#50dde8", size: 9,
+    belt: "Theory", beltColor: "#ff9966",
+    toxicity: 2, gravity: 5,
+    tooltip: "Dr. Kaneesha Parsard — Theory (outward-facing) · Archival Sociology",
+    detail: {
+      title: "Dr. Kaneesha Parsard",
+      body: "Week 3 | April 7\n\nThermal Zone: Theory (a bit outward-facing)\n\nMethodologies (Moons): Archival Sociology",
+      image: "", link: ""
+    }
+  },
+  // ── idx 3 · Brusch · Week 8 (Outward-facing Scholarship) ─────
+  {
+    orbitFrac: 0.27, speed: 0.055, angle0: 0.91,
+    label: "Brusch", color: "#55e8a0", size: 10,
+    belt: "Outward-facing Scholarship", beltColor: "#ffe090",
+    toxicity: 8, gravity: 3,
+    tooltip: "Dr. Joeseph Dov Brusch — Outward-facing Scholarship · Public Health · Quantitative Research",
+    detail: {
+      title: "Dr. Joeseph Dov Brusch",
+      body: "Week 8 | May 12\n\nThermal Zone: Outward-facing Scholarship\n\nMethodologies (Moons): Public Health · Quantitative Research",
+      image: "", link: ""
+    }
+  },
+  // ── idx 4 · Schilt · Week 4 (Outward-facing Scholarship + Practice) ──
+  {
+    orbitFrac: 0.31, speed: 0.042, angle0: 3.31,
+    label: "Schilt", color: "#7eb8f7", size: 10,
+    belt: "Scholarship · Practice", beltColor: "#aad880",
+    toxicity: 3, gravity: 6,
+    tooltip: "Dr. Kristen Schilt — Outward-facing Scholarship · Practice",
+    detail: {
+      title: "Dr. Kristen Schilt",
+      body: "Week 4 | April 14\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): Documentary · Research · Semi-structured Interviews · Sociology",
+      image: "", link: ""
+    }
+  },
+  // ── idx 5 · Tremmel · Week 1 (Outward-facing Scholarship + Practice) ──
+  {
+    orbitFrac: 0.35, speed: 0.033, angle0: 5.71,
+    label: "Tremmel", color: "#ffaa55", size: 10,
+    belt: "Scholarship · Practice", beltColor: "#aad880",
+    toxicity: 1, gravity: 6,
+    tooltip: "Dr. Red Vaughan Tremmel — Outward-facing Scholarship · Practice",
+    detail: {
+      title: "Dr. Red Vaughan Tremmel",
+      body: "Week 1 | March 24\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): History · Documentary · Interviews",
+      image: "", link: ""
+    }
+  },
+  // ── idx 6 · Moore · Week 7 (Outward-facing Scholarship + Practice) ──
+  {
+    orbitFrac: 0.39, speed: 0.026, angle0: 2.13,
+    label: "Moore", color: "#ffd055", size: 11,
+    belt: "Scholarship · Practice", beltColor: "#aad880",
+    toxicity: 1, gravity: 5,
+    tooltip: "Dr. Lisa Moore — Outward-facing Scholarship · Practice",
+    detail: {
+      title: "Dr. Lisa Moore",
+      body: "Week 7 | May 5\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): Ethnography · Blog · Social Work · Consulting",
+      image: "", link: ""
+    }
+  },
+  // ── idx 7 · Abdelhadi · Week 2 · outermost (Theory + Practice) ──
+  {
+    orbitFrac: 0.43, speed: 0.020, angle0: 4.53,
+    label: "Abdelhadi", color: "#b080f0", size: 12,
+    belt: "Theory · Practice", beltColor: "#cc88ff",
+    toxicity: 3, gravity: 10,
+    tooltip: "Dr. Eman Abdelhadi — Theory · Practice · Interviews · Organizing",
+    detail: {
+      title: "Dr. Eman Abdelhadi",
+      body: "Week 2 | March 31\n\nThermal Zone: Theory · Practice\n\nMethodologies (Moons): Interviews · Organizing",
+      image: "", link: ""
+    }
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+//  ★ MOONS — methodologies / sources of evidence ★
+//
+//  planetIdx : index in ORBIT_PLANETS (0=Briggs … 7=Abdelhadi)
+//  r         : orbit radius around parent planet (px)
+//  speed     : angular speed (rad/s)   angle0 : start angle (rad)
+//  size      : moon radius (px)        color  : moon color
+//  label     : methodology name (drawn as canvas text on hover)
+// ═══════════════════════════════════════════════════════════════════
+const MOONS = [
+  // Briggs (0): philosophy · podcast
+  { planetIdx: 0, r: 18, speed: 0.80, angle0: 2.0, size: 4, color: '#c0a0f8', label: 'Philosophy'          },
+  { planetIdx: 0, r: 28, speed: 0.55, angle0: 0.1, size: 4, color: '#ff9966', label: 'Podcast'             },
+  // Flatley (1): comparatism · art history
+  { planetIdx: 1, r: 18, speed: 0.65, angle0: 0.5, size: 4, color: '#a0e888', label: 'Comparatism'         },
+  { planetIdx: 1, r: 28, speed: 0.45, angle0: 3.6, size: 4, color: '#e880d8', label: 'Art History'         },
+  // Parsard (2): archival sociology
+  { planetIdx: 2, r: 20, speed: 0.70, angle0: 1.0, size: 4, color: '#70d8f0', label: 'Archival Sociology'  },
+  // Brusch (3): public health · quantitative research
+  { planetIdx: 3, r: 18, speed: 0.65, angle0: 1.5, size: 4, color: '#80ffcc', label: 'Public Health'       },
+  { planetIdx: 3, r: 28, speed: 0.45, angle0: 4.0, size: 4, color: '#ff9966', label: 'Quantitative Research'},
+  // Schilt (4): documentary · research · semi-structured interviews · sociology
+  { planetIdx: 4, r: 16, speed: 0.80, angle0: 0.0, size: 4, color: '#ffa057', label: 'Documentary'         },
+  { planetIdx: 4, r: 24, speed: 0.60, angle0: 1.6, size: 4, color: '#70d8f0', label: 'Research'            },
+  { planetIdx: 4, r: 32, speed: 0.42, angle0: 3.2, size: 4, color: '#f0a0d8', label: 'Interviews'          },
+  { planetIdx: 4, r: 40, speed: 0.28, angle0: 4.8, size: 4, color: '#8899ff', label: 'Sociology'           },
+  // Tremmel (5): history · documentary · interviews
+  { planetIdx: 5, r: 16, speed: 0.80, angle0: 1.0, size: 4, color: '#ffd860', label: 'History'             },
+  { planetIdx: 5, r: 24, speed: 0.55, angle0: 3.1, size: 4, color: '#ffa057', label: 'Documentary'         },
+  { planetIdx: 5, r: 32, speed: 0.38, angle0: 5.2, size: 4, color: '#f0a0d8', label: 'Interviews'          },
+  // Moore (6): ethnography · blog · social work · consulting
+  { planetIdx: 6, r: 16, speed: 0.80, angle0: 1.5, size: 4, color: '#60e8c0', label: 'Ethnography'         },
+  { planetIdx: 6, r: 24, speed: 0.60, angle0: 3.0, size: 4, color: '#ffdd88', label: 'Blog'                },
+  { planetIdx: 6, r: 32, speed: 0.42, angle0: 4.5, size: 4, color: '#80ccff', label: 'Social Work'         },
+  { planetIdx: 6, r: 40, speed: 0.28, angle0: 0.3, size: 4, color: '#ffaa99', label: 'Consulting'          },
+  // Abdelhadi (7): interviews · organizing
+  { planetIdx: 7, r: 18, speed: 0.60, angle0: 0.8, size: 4, color: '#f0a0d8', label: 'Interviews'          },
+  { planetIdx: 7, r: 28, speed: 0.40, angle0: 3.5, size: 4, color: '#bb99ff', label: 'Organizing'          },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+//  ★ HIDDEN NODE CONFIG — only visible through the telescope ★
+//
+//  Fields:
+//    x, y  — position as % of page (0–100)
+//    label — main label
+//    sub   — subtitle (smaller text)
+// ═══════════════════════════════════════════════════════════════════
+const HIDDEN_NODES = [
+  { x: 30, y: 48, label: "Throughlines",               sub: "Cross-cutting themes connecting all researchers" },
+  { x: 66, y: 28, label: "Theory",                     sub: "Thermal Zone — abstract conceptualization (inner)" },
+  { x: 50, y: 82, label: "Outward-facing Scholarship", sub: "Thermal Zone — academic production with public reach" },
+  { x: 87, y: 53, label: "Practice",                   sub: "Thermal Zone — community, social work & activism" },
+  { x: 10, y: 44, label: "Methodologies",              sub: "The Moons — how researchers gather evidence" },
+  { x: 72, y: 16, label: "Research Network",           sub: "All eight professors in constellation" },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+//  ★ Telescope lens radius (px) — adjust as needed ★
+// ═══════════════════════════════════════════════════════════════════
+const LENS_R = 130;
+
+
+// ───────────────────────────────────────────────────────────────────
+//  Core logic — no need to modify below
+// ───────────────────────────────────────────────────────────────────
+
+// ── Star canvas ───────────────────────────────
+const canvas = document.getElementById('starCanvas');
+const ctx    = canvas.getContext('2d');
+let stars = [], nebulae = [];
+let orbitEls = [];           // DOM refs for orbit planet elements, updated each frame
+let planetPositions = [];    // {x,y} for each orbit planet, updated every frame
+let asteroidBeltP   = [];    // pre-generated asteroid belt particles
+let hoveredPlanetIdx = -1;   // index of currently-hovered orbit planet (-1 = none)
+let clickedPlanetIdx  = -1;  // index of last-clicked orbit planet — shows moon labels
+let scatteredAstP   = [];    // pre-generated scattered small asteroids
+
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function buildStars() {
+  stars = Array.from({ length: 320 }, () => ({
+    x:   Math.random() * canvas.width,
+    y:   Math.random() * canvas.height,
+    r:   Math.random() * 1.6 + 0.2,
+    a:   Math.random(),
+    spd: Math.random() * 0.006 + 0.002,
+    ph:  Math.random() * Math.PI * 2
+  }));
+
+  const colors = [
+    '70,50,180,', '180,55,100,', '35,75,190,',
+    '95,155,210,', '70,95,195,'
+  ];
+  nebulae = Array.from({ length: 5 }, (_, i) => ({
+    x:  Math.random() * canvas.width,
+    y:  Math.random() * canvas.height,
+    rx: Math.random() * 280 + 160,
+    ry: Math.random() * 180 + 90,
+    color: 'rgba(' + colors[i % colors.length],
+    a: Math.random() * 0.08 + 0.03
+  }));
+}
+
+function buildAsteroids() {
+  // Belt ring just outside Earth orbit (orbitFrac 0.35), at ~0.455 * base
+  asteroidBeltP = Array.from({ length: 360 }, () => ({
+    angle:  Math.random() * Math.PI * 2,
+    rOff:   Math.random(),           // 0–1 mapped to belt width
+    size:   Math.random() * 2.8 + 0.8,
+    alpha:  Math.random() * 0.55 + 0.35,
+    bright: Math.random() < 0.22     // occasional brighter chip
+  }));
+  // Scattered small asteroids further out
+  scatteredAstP = Array.from({ length: 22 }, () => ({
+    angle: Math.random() * Math.PI * 2,
+    rFrac: 0.52 + Math.random() * 0.38,
+    size:  Math.random() * 1.1 + 0.4,
+    alpha: Math.random() * 0.3 + 0.12
+  }));
+}
+
+function drawBg(t) {
+  ctx.fillStyle = '#060818';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Nebula blobs
+  nebulae.forEach(n => {
+    const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.rx);
+    g.addColorStop(0, n.color + (n.a * 2).toFixed(2) + ')');
+    g.addColorStop(1, n.color + '0)');
+    ctx.save();
+    ctx.scale(1, n.ry / n.rx);
+    ctx.beginPath();
+    ctx.arc(n.x, n.y * (n.rx / n.ry), n.rx, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.restore();
+  });
+
+  const cx   = canvas.width  / 2;
+  const cy   = canvas.height / 2;
+  const base = Math.min(canvas.width, canvas.height);
+
+  // Planet orbit rings
+  ORBIT_PLANETS.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, base * p.orbitFrac, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(120, 170, 255, 0.18)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 10]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // Asteroid belt — decorative outer field beyond all professor orbits
+  const beltR = base * 0.50;
+  const beltW = base * 0.050;
+  asteroidBeltP.forEach(a => {
+    const r  = beltR + (a.rOff - 0.5) * beltW;
+    const ax = cx + Math.cos(a.angle) * r;
+    const ay = cy + Math.sin(a.angle) * r;
+    ctx.beginPath();
+    ctx.arc(ax, ay, a.size, 0, Math.PI * 2);
+    ctx.fillStyle = a.bright
+      ? `rgba(240,215,160,${a.alpha})`
+      : `rgba(185,160,115,${a.alpha})`;
+    ctx.fill();
+  });
+
+  // Scattered small asteroids — outer region
+  scatteredAstP.forEach(a => {
+    const r  = base * a.rFrac;
+    const ax = cx + Math.cos(a.angle) * r;
+    const ay = cy + Math.sin(a.angle) * r;
+    ctx.beginPath();
+    ctx.arc(ax, ay, a.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(140,120,90,${a.alpha})`;
+    ctx.fill();
+  });
+
+  // Black hole — dark disk + accretion ring (behind DOM node at 92%, 8%)
+  const bhX = canvas.width  * 0.88;
+  const bhY = canvas.height * 0.12;
+  const bhGrad = ctx.createRadialGradient(bhX, bhY, 0, bhX, bhY, 144);
+  bhGrad.addColorStop(0,    'rgba(0,0,0,1)');
+  bhGrad.addColorStop(0.32, 'rgba(0,0,0,1)');
+  bhGrad.addColorStop(0.55, 'rgba(60,20,155,0.75)');
+  bhGrad.addColorStop(0.78, 'rgba(100,45,220,0.28)');
+  bhGrad.addColorStop(1,    'rgba(0,0,0,0)');
+  ctx.beginPath();
+  ctx.arc(bhX, bhY, 144, 0, Math.PI * 2);
+  ctx.fillStyle = bhGrad;
+  ctx.fill();
+  // Accretion disk (tilted ellipse)
+  ctx.save();
+  ctx.translate(bhX, bhY);
+  ctx.rotate(0.32);
+  ctx.scale(1, 0.27);
+  ctx.beginPath();
+  ctx.arc(0, 0, 124, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(175, 80, 255, 0.52)';
+  ctx.lineWidth = 20;
+  ctx.stroke();
+  ctx.restore();
+
+  // Stars with twinkling
+  stars.forEach(s => {
+    const tw = 0.35 + 0.65 * Math.sin(t * s.spd * 60 + s.ph);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(215,230,255,${(s.a * tw).toFixed(2)})`;
+    ctx.fill();
+  });
+
+  // Moons — drawn on top of stars, relative to current planet positions
+  if (planetPositions.length === ORBIT_PLANETS.length) {
+    // Sphere-of-influence rings — only shown when planet is clicked
+    ORBIT_PLANETS.forEach((p, i) => {
+      if (!p.belt || clickedPlanetIdx !== i) return;
+      const pl = planetPositions[i];
+      const ringR = p.size + 14;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pl.x, pl.y, ringR, 0, Math.PI * 2);
+      ctx.strokeStyle = p.beltColor;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.5;
+      ctx.setLineDash([3, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '8px sans-serif';
+      ctx.fillStyle = p.beltColor;
+      ctx.globalAlpha = 0.75;
+      ctx.textAlign = 'center';
+      ctx.fillText(p.belt, pl.x, pl.y + ringR + 11);
+      ctx.restore();
+    });
+
+    // Moons with methodology labels
+    MOONS.forEach(m => {
+      const pl    = planetPositions[m.planetIdx];
+      const angle = m.angle0 + t * m.speed;
+      const mx    = pl.x + Math.cos(angle) * m.r;
+      const my    = pl.y + Math.sin(angle) * m.r;
+      // Faint moon orbit trace
+      ctx.beginPath();
+      ctx.arc(pl.x, pl.y, m.r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(200, 200, 225, 0.13)';
+      ctx.lineWidth = 0.5;
+      ctx.setLineDash([2, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Moon body
+      ctx.beginPath();
+      ctx.arc(mx, my, m.size, 0, Math.PI * 2);
+      ctx.fillStyle = m.color;
+      ctx.fill();
+      // Methodology label — revealed when parent planet is hovered
+      if (clickedPlanetIdx === m.planetIdx) {
+        ctx.save();
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillStyle = m.color;
+        ctx.globalAlpha = 0.95;
+        ctx.textAlign = 'center';
+        // subtle shadow for readability
+        ctx.shadowColor = 'rgba(0,0,20,0.9)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(m.label, mx, my - m.size - 5);
+        ctx.restore();
+      }
+    });
+  }
+}
+
+// ── Node rendering ──────────────────────────
+function makeNodeEl(n, posStyle) {
+  const el = document.createElement('div');
+  el.className = 'node' + (n === SUN ? ' node-sun' : '') + (n.isBlackHole ? ' node-bh' : '');
+  el.style.cssText = `
+    ${posStyle}
+    width: ${n.size * 2}px; height: ${n.size * 2}px;
+    background: ${n.color};
+    --c: ${n.color};
+    box-shadow: 0 0 8px 2px ${n.color};
+  `;
+  const lbl = document.createElement('span');
+  lbl.className = 'node-label';
+  lbl.style.color = n.color;
+  lbl.style.textShadow = `0 0 8px ${n.color}`;
+  lbl.textContent = n.label;
+  el.appendChild(lbl);
+  el.addEventListener('mouseenter', e => showTip(e, n.tooltip));
+  el.addEventListener('mousemove',  e => moveTip(e));
+  el.addEventListener('mouseleave', hideTip);
+  el.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
+  return el;
+}
+
+function renderNodes() {
+  const layer = document.getElementById('nodes-layer');
+  layer.innerHTML = '';
+  orbitEls = [];
+
+  // Sun — fixed at page center via CSS %
+  layer.appendChild(makeNodeEl(SUN, 'left: 50%; top: 50%;'));
+
+  // Orbit planets — position updated each frame by updateOrbitPlanets()
+  ORBIT_PLANETS.forEach((p, i) => {
+    const el = makeNodeEl(p, 'left: 0; top: 0;');
+    el.classList.add('node-orbit');
+    el.addEventListener('click', () => { clickedPlanetIdx = i; });
+    el.addEventListener('mouseenter', () => { hoveredPlanetIdx = i; });
+    el.addEventListener('mouseleave', () => { hoveredPlanetIdx = -1; });
+    orbitEls.push(el);
+    layer.appendChild(el);
+  });
+
+  // Scattered nodes — fixed positions via CSS %
+  NODES.forEach(n => {
+    layer.appendChild(makeNodeEl(n, `left: ${n.x}%; top: ${n.y}%;`));
+  });
+}
+
+// Move orbit planets to their current angular position
+function updateOrbitPlanets(t) {
+  const cx   = window.innerWidth  / 2;
+  const cy   = window.innerHeight / 2;
+  const base = Math.min(window.innerWidth, window.innerHeight);
+  planetPositions = ORBIT_PLANETS.map((p, i) => {
+    const angle = p.angle0 + t * p.speed;
+    const x = cx + Math.cos(angle) * base * p.orbitFrac;
+    const y = cy + Math.sin(angle) * base * p.orbitFrac;
+    orbitEls[i].style.left = x + 'px';
+    orbitEls[i].style.top  = y + 'px';
+    return { x, y };
+  });
+}
+
+function renderHiddenNodes() {
+  const layer = document.getElementById('hidden-layer');
+  layer.innerHTML = '';
+
+  HIDDEN_NODES.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'h-node';
+    el.style.cssText = `left: ${n.x}%; top: ${n.y}%;`;
+    el.innerHTML = `
+      <div class="h-dot"></div>
+      <div class="h-label">${n.label}</div>
+      <div class="h-sub">${n.sub}</div>
+    `;
+    layer.appendChild(el);
+  });
+}
+
+// ── Tooltip ──────────────────────────────────
+const tipEl = document.getElementById('tooltip');
+
+function showTip(e, text) {
+  tipEl.textContent = text;
+  tipEl.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e) {
+  const x = Math.min(e.clientX + 14, window.innerWidth - 230);
+  const y = Math.max(e.clientY - 12, 4);
+  tipEl.style.left = x + 'px';
+  tipEl.style.top  = y + 'px';
+}
+function hideTip() { tipEl.classList.remove('show'); }
+
+// ── Modal ────────────────────────────────────
+const modalBg    = document.getElementById('modal-bg');
+const modalTitle = document.getElementById('modal-title');
+const modalBody  = document.getElementById('modal-body');
+
+function openModal(n) {
+  modalTitle.textContent = n.detail.title;
+  const planetIdx = ORBIT_PLANETS.indexOf(n);
+  let html = '';
+
+  if (planetIdx !== -1) {
+    // Orbit planet — structured layout
+    const weekLine = n.detail.body.split('\n')[0].split('|')[0].trim();
+    html += `<p class="modal-week">${weekLine}</p>`;
+
+    if (n.belt) {
+      html += `<div class="modal-section"><span class="modal-section-label">Sphere of Influence</span><span class="modal-section-value" style="color:${n.beltColor}">${n.belt}</span></div>`;
+    }
+
+    const moons = MOONS.filter(m => m.planetIdx === planetIdx);
+    html += `<div class="modal-section"><span class="modal-section-label">🌙 Methodologies</span>`;
+    if (moons.length > 0) {
+      html += `<div class="methods-grid">`;
+      moons.forEach(m => {
+        html += `<div class="method-pill" style="--mc:${m.color}"><span class="moon-dot" style="background:${m.color}"></span>${m.label}</div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<span class="modal-section-value" style="color:#555">—</span>`;
+    }
+    html += `</div>`;
+
+    // Toxicity & Gravity scores
+    if (n.toxicity !== undefined) {
+      const toxPct  = n.toxicity  * 10;
+      const gravPct = n.gravity   * 10;
+      // toxicity: low=green, high=red
+      const toxColor  = `hsl(${120 - n.toxicity * 12}, 80%, 55%)`;
+      // gravity: low=blue, high=purple
+      const gravColor = `hsl(${260 + n.gravity * 4}, 75%, 65%)`;
+      html += `<div class="modal-section"><span class="modal-section-label">Scores</span>
+        <div class="score-row">
+          <span class="score-label">Toxicity Score <span style="color:#556;font-size:10px">(lower = more livable)</span></span>
+          <div class="score-track"><div class="score-fill" style="width:${toxPct}%;background:${toxColor}"></div></div>
+          <span class="score-num">${n.toxicity}/10</span>
+        </div>
+        <div class="score-row">
+          <span class="score-label">Gravitational Pull <span style="color:#556;font-size:10px">(higher = more radical)</span></span>
+          <div class="score-track"><div class="score-fill" style="width:${gravPct}%;background:${gravColor}"></div></div>
+          <span class="score-num">${n.gravity}/10</span>
+        </div>
+      </div>`;
+    }
+  } else {
+    html = `<p class="body-text">${n.detail.body}</p>`;
+  }
+
+  if (n.detail.image) html += `<img src="${n.detail.image}" alt="${n.detail.title}">`;
+  if (n.detail.link)  html += `<p><a href="${n.detail.link}" target="_blank" rel="noopener noreferrer">Learn more →</a></p>`;
+  modalBody.innerHTML = html;
+  modalBg.classList.add('show');
+}
+
+function closeModal() { modalBg.classList.remove('show'); clickedPlanetIdx = -1; }
+
+document.getElementById('btn-close').onclick = closeModal;
+modalBg.addEventListener('click', e => { if (e.target === modalBg) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Telescope mode ───────────────────────────
+const telescopeOverlay = document.getElementById('telescope-overlay');
+const hiddenLayer      = document.getElementById('hidden-layer');
+const ringEl           = document.getElementById('telescope-ring');
+const btnTelescope     = document.getElementById('btn-telescope');
+
+// 根据 LENS_R 设置镜头圆圈尺寸
+ringEl.style.width  = LENS_R * 2 + 'px';
+ringEl.style.height = LENS_R * 2 + 'px';
+
+let teleActive = false;
+
+btnTelescope.addEventListener('click', () => {
+  teleActive = !teleActive;
+  btnTelescope.classList.toggle('active', teleActive);
+  btnTelescope.textContent = teleActive ? '🔭 Close Telescope' : '🔭 Telescope Mode';
+
+  if (teleActive) {
+    hiddenLayer.classList.add('active');
+    ringEl.classList.add('active');
+    document.body.style.cursor = 'none';
+  } else {
+    hiddenLayer.classList.remove('active');
+    ringEl.classList.remove('active');
+    hiddenLayer.style.clipPath      = 'none';
+    telescopeOverlay.style.background = 'transparent';
+    document.body.style.cursor = '';
+  }
+});
+
+document.addEventListener('mousemove', e => {
+  if (!teleActive) return;
+
+  const x = e.clientX;
+  const y = e.clientY;
+
+  // Move lens ring (visual)
+  ringEl.style.left = x + 'px';
+  ringEl.style.top  = y + 'px';
+
+  // Hidden layer: clip to lens circle only
+  hiddenLayer.style.clipPath = `circle(${LENS_R}px at ${x}px ${y}px)`;
+
+  // Overlay: transparent at lens, dark outside — spotlight effect
+  telescopeOverlay.style.background = `
+    radial-gradient(
+      circle ${LENS_R}px at ${x}px ${y}px,
+      transparent 0%,
+      transparent ${LENS_R - 8}px,
+      rgba(6, 8, 24, 0.90) ${LENS_R + 16}px
+    )
+  `;
+});
+
+// ── Main animation loop ──────────────────────
+function animate(ts) {
+  const t = ts / 1000;
+  drawBg(t);
+  updateOrbitPlanets(t);
+  requestAnimationFrame(animate);
+}
+
+// ── Init ─────────────────────────────────────
+(function init() {
+  resizeCanvas();
+  buildStars();
+  buildAsteroids();
+  renderNodes();
+  renderHiddenNodes();
+  requestAnimationFrame(animate);
+})();
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  buildStars();
+  buildAsteroids();
+});
+</script>
+</body>
+</html>
