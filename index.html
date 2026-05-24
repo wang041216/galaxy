@@ -133,6 +133,57 @@
     color: #ddaaff;
   }
 
+  /* ── Golden star (Dominant Culture) ── */
+  .node-golden-star {
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    filter: drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 18px #ffaa00);
+    box-shadow: none !important;
+    background: linear-gradient(160deg, #fff4a0, #ffd700, #ff9900) !important;
+    animation: starGlow 2.4s ease-in-out infinite;
+  }
+  @keyframes starGlow {
+    0%,100% { filter: drop-shadow(0 0 6px #ffd700) drop-shadow(0 0 14px #ffaa00); }
+    50%      { filter: drop-shadow(0 0 14px #fff088) drop-shadow(0 0 28px #ffd700); }
+  }
+
+  /* ── Dark Matter hidden node ── */
+  .h-node-dm {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #aaaacc;
+    font-size: 13px;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .h-node-dm .h-dm-blob {
+    width: 52px;
+    height: 52px;
+    background: radial-gradient(circle, rgba(80,40,140,0.5) 0%, rgba(30,10,60,0.25) 55%, transparent 80%);
+    border-radius: 50%;
+    margin: 0 auto 6px;
+    box-shadow: 0 0 22px 8px rgba(120,60,220,0.18);
+    animation: dmPulse 3.5s ease-in-out infinite;
+  }
+  @keyframes dmPulse {
+    0%,100% { opacity: 0.45; transform: scale(1);   }
+    50%      { opacity: 0.85; transform: scale(1.12); }
+  }
+  .h-node-dm .h-label {
+    text-shadow: 0 0 8px #9944cc;
+    font-size: 12px;
+  }
+  .h-node-dm .h-sub {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 2px;
+    color: #9988bb;
+  }
+  .h-node-dm:hover .h-dm-blob {
+    opacity: 1;
+    box-shadow: 0 0 30px 12px rgba(140,80,255,0.35);
+  }
+
   /* ── 望远镜镜头圆圈 ── */
   #telescope-ring {
     position: fixed;
@@ -448,6 +499,19 @@ const NODES = [
       link: "https://en.wikipedia.org/wiki/Black_hole"
     }
   },
+  {
+    x: 12, y: 78,
+    label: "Stars",
+    color: "#ffd700",
+    size: 22,
+    isGoldenStar: true,
+    tooltip: "Dominant Culture — click to explore",
+    detail: {
+      title: "Stars — Dominant Culture",
+      body: "Just as stars beyond our Sun illuminate the universe with their own ambient light, dominant culture casts its norms and values across social life — shaping what is seen as natural, desirable, or deviant without ever announcing itself. Its power lies in appearing self-evident.",
+      image: "", link: ""
+    }
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -475,6 +539,19 @@ const SUN = {
 //  belt      : Sphere of Influence label (null = none)
 //  beltColor : color of the sphere-of-influence ring
 // ═══════════════════════════════════════════════════════════════════
+
+// Throughline colour palette
+const THROUGHLINE_COLORS = {
+  'Institutionality':                       '#ff8800',  // orange
+  'Social norms':                           '#dd2299',  // magenta
+  'Radicalization':                         '#cc1133',  // crimson
+  'Autonomy':                               '#ffdd00',  // yellow
+  'Fear':                                   '#cc4400',  // blood orange
+  'Erotic':                                 '#4488ff',  // blue
+  'Crossing of boundaries/Diversification': '#44cc88',  // green
+  'Interpersonality':                       '#aa88ff',  // lavender
+};
+
 const ORBIT_PLANETS = [
   // ── idx 0 · Briggs · Week 6 · innermost (Theory) ─────────────
   {
@@ -482,6 +559,7 @@ const ORBIT_PLANETS = [
     label: "Briggs", color: "#ff7788", size: 8,
     belt: "Theory", beltColor: "#ff7755",
     toxicity: 3, gravity: 8,
+    throughlines: ['Institutionality','Social norms','Autonomy','Fear','Crossing of boundaries/Diversification'],
     tooltip: "Dr. Ray Briggs — Theory · Philosophy · Podcast",
     detail: {
       title: "Dr. Ray Briggs",
@@ -495,6 +573,7 @@ const ORBIT_PLANETS = [
     label: "Flatley", color: "#f088d0", size: 8,
     belt: "Theory", beltColor: "#ff7755",
     toxicity: 7, gravity: 2,
+    throughlines: ['Social norms','Crossing of boundaries/Diversification'],
     tooltip: "Dr. Johnathan Flatley — Theory · Comparatism · Art History",
     detail: {
       title: "Dr. Johnathan Flatley",
@@ -508,6 +587,7 @@ const ORBIT_PLANETS = [
     label: "Parsard", color: "#50dde8", size: 9,
     belt: "Theory", beltColor: "#ff9966",
     toxicity: 2, gravity: 5,
+    throughlines: ['Radicalization','Autonomy','Erotic'],
     tooltip: "Dr. Kaneesha Parsard — Theory (outward-facing) · Archival Sociology",
     detail: {
       title: "Dr. Kaneesha Parsard",
@@ -521,6 +601,7 @@ const ORBIT_PLANETS = [
     label: "Brusch", color: "#55e8a0", size: 10,
     belt: "Outward-facing Scholarship", beltColor: "#ffe090",
     toxicity: 8, gravity: 3,
+    throughlines: ['Institutionality','Autonomy'],
     tooltip: "Dr. Joeseph Dov Brusch — Outward-facing Scholarship · Public Health · Quantitative Research",
     detail: {
       title: "Dr. Joeseph Dov Brusch",
@@ -534,6 +615,7 @@ const ORBIT_PLANETS = [
     label: "Schilt", color: "#7eb8f7", size: 10,
     belt: "Scholarship · Practice", beltColor: "#aad880",
     toxicity: 3, gravity: 6,
+    throughlines: ['Institutionality','Social norms','Autonomy','Fear','Crossing of boundaries/Diversification','Interpersonality'],
     tooltip: "Dr. Kristen Schilt — Outward-facing Scholarship · Practice",
     detail: {
       title: "Dr. Kristen Schilt",
@@ -547,6 +629,7 @@ const ORBIT_PLANETS = [
     label: "Tremmel", color: "#ffaa55", size: 10,
     belt: "Scholarship · Practice", beltColor: "#aad880",
     toxicity: 1, gravity: 6,
+    throughlines: ['Radicalization','Autonomy','Fear','Erotic','Crossing of boundaries/Diversification'],
     tooltip: "Dr. Red Vaughan Tremmel — Outward-facing Scholarship · Practice",
     detail: {
       title: "Dr. Red Vaughan Tremmel",
@@ -560,6 +643,7 @@ const ORBIT_PLANETS = [
     label: "Moore", color: "#ffd055", size: 11,
     belt: "Scholarship · Practice", beltColor: "#aad880",
     toxicity: 1, gravity: 5,
+    throughlines: ['Institutionality','Social norms','Fear','Crossing of boundaries/Diversification'],
     tooltip: "Dr. Lisa Moore — Outward-facing Scholarship · Practice",
     detail: {
       title: "Dr. Lisa Moore",
@@ -573,6 +657,7 @@ const ORBIT_PLANETS = [
     label: "Abdelhadi", color: "#b080f0", size: 12,
     belt: "Theory · Practice", beltColor: "#cc88ff",
     toxicity: 3, gravity: 10,
+    throughlines: ['Social norms','Autonomy','Fear','Crossing of boundaries/Diversification'],
     tooltip: "Dr. Eman Abdelhadi — Theory · Practice · Interviews · Organizing",
     detail: {
       title: "Dr. Eman Abdelhadi",
@@ -636,7 +721,13 @@ const HIDDEN_NODES = [
   { x: 50, y: 82, label: "Outward-facing Scholarship", sub: "Thermal Zone — academic production with public reach" },
   { x: 87, y: 53, label: "Practice",                   sub: "Thermal Zone — community, social work & activism" },
   { x: 10, y: 44, label: "Methodologies",              sub: "The Moons — how researchers gather evidence" },
-  { x: 72, y: 16, label: "Research Network",           sub: "All eight professors in constellation" },
+  { x: 55, y: 38, label: "Dark Matter",                sub: "Discourse — the invisible power shaping what can be said",
+    isDarkMatter: true,
+    detail: {
+      title: "Dark Matter — Discourse",
+      body: "Dark matter is invisible yet constitutes 85% of the universe's mass — its gravity binds everything together. Discourse works the same way: the unseen systems of language and power that determine what can be said, known, or imagined. It structures social reality from the inside, without ever appearing directly."
+    }
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -861,9 +952,19 @@ function drawBg(t) {
 }
 
 // ── Node rendering ──────────────────────────
+function throughlineGradient(lines) {
+  if (!lines || lines.length === 0) return null;
+  const n = lines.length;
+  const stops = lines.flatMap((l, i) => {
+    const c = THROUGHLINE_COLORS[l] || '#888888';
+    return [`${c} ${((i / n) * 100).toFixed(1)}%`, `${c} ${(((i + 1) / n) * 100).toFixed(1)}%`];
+  });
+  return `linear-gradient(to bottom, ${stops.join(', ')})`;
+}
+
 function makeNodeEl(n, posStyle) {
   const el = document.createElement('div');
-  el.className = 'node' + (n === SUN ? ' node-sun' : '') + (n.isBlackHole ? ' node-bh' : '');
+  el.className = 'node' + (n === SUN ? ' node-sun' : '') + (n.isBlackHole ? ' node-bh' : '') + (n.isGoldenStar ? ' node-golden-star' : '');
   el.style.cssText = `
     ${posStyle}
     width: ${n.size * 2}px; height: ${n.size * 2}px;
@@ -896,6 +997,9 @@ function renderNodes() {
   ORBIT_PLANETS.forEach((p, i) => {
     const el = makeNodeEl(p, 'left: 0; top: 0;');
     el.classList.add('node-orbit');
+    if (p.throughlines && p.throughlines.length > 0) {
+      el.style.background = throughlineGradient(p.throughlines);
+    }
     el.addEventListener('click', () => { clickedPlanetIdx = i; });
     el.addEventListener('mouseenter', () => { hoveredPlanetIdx = i; });
     el.addEventListener('mouseleave', () => { hoveredPlanetIdx = -1; });
@@ -929,15 +1033,31 @@ function renderHiddenNodes() {
   layer.innerHTML = '';
 
   HIDDEN_NODES.forEach(n => {
-    const el = document.createElement('div');
-    el.className = 'h-node';
-    el.style.cssText = `left: ${n.x}%; top: ${n.y}%;`;
-    el.innerHTML = `
-      <div class="h-dot"></div>
-      <div class="h-label">${n.label}</div>
-      <div class="h-sub">${n.sub}</div>
-    `;
-    layer.appendChild(el);
+    if (n.isDarkMatter) {
+      const el = document.createElement('div');
+      el.className = 'h-node-dm';
+      el.style.cssText = `left: ${n.x}%; top: ${n.y}%;`;
+      el.innerHTML = `
+        <div class="h-dm-blob"></div>
+        <div class="h-label">${n.label}</div>
+        <div class="h-sub">${n.sub}</div>
+      `;
+      el.addEventListener('mouseenter', e => showTip(e, n.sub));
+      el.addEventListener('mousemove',  e => moveTip(e));
+      el.addEventListener('mouseleave', hideTip);
+      el.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
+      layer.appendChild(el);
+    } else {
+      const el = document.createElement('div');
+      el.className = 'h-node';
+      el.style.cssText = `left: ${n.x}%; top: ${n.y}%;`;
+      el.innerHTML = `
+        <div class="h-dot"></div>
+        <div class="h-label">${n.label}</div>
+        <div class="h-sub">${n.sub}</div>
+      `;
+      layer.appendChild(el);
+    }
   });
 }
 
@@ -988,6 +1108,16 @@ function openModal(n) {
       html += `<span class="modal-section-value" style="color:#555">—</span>`;
     }
     html += `</div>`;
+
+    // Throughlines
+    if (n.throughlines && n.throughlines.length > 0) {
+      html += `<div class="modal-section"><span class="modal-section-label">🔗 Throughlines</span><div class="methods-grid">`;
+      n.throughlines.forEach(t => {
+        const tc = THROUGHLINE_COLORS[t] || '#888';
+        html += `<div class="method-pill" style="--mc:${tc}"><span class="moon-dot" style="background:${tc}"></span>${t}</div>`;
+      });
+      html += `</div></div>`;
+    }
 
     // Toxicity & Gravity scores
     if (n.toxicity !== undefined) {
