@@ -201,6 +201,22 @@
 
   #telescope-ring.active { opacity: 1; }
 
+  /* ── Telescope cursor center dot ── */
+  #telescope-cursor {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    background: rgba(160, 220, 255, 0.95);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 6;
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 0 4px 2px rgba(100, 180, 255, 0.7);
+  }
+  #telescope-cursor.active { opacity: 1; }
+
   /* ── Tooltip ── */
   #tooltip {
     position: fixed;
@@ -444,6 +460,8 @@
 
 <!-- Telescope lens ring (visual only) -->
 <div id="telescope-ring"></div>
+<!-- Telescope cursor center dot -->
+<div id="telescope-cursor"></div>
 
 <!-- Tooltip -->
 <div id="tooltip"></div>
@@ -497,19 +515,6 @@ const NODES = [
       body: "A black hole is a region of spacetime where gravity is so intense that nothing — not even light — can escape once it crosses the event horizon. The first image of a black hole (M87*) was captured by the Event Horizon Telescope in 2019.",
       image: "",
       link: "https://en.wikipedia.org/wiki/Black_hole"
-    }
-  },
-  {
-    x: 12, y: 78,
-    label: "Stars",
-    color: "#ffd700",
-    size: 22,
-    isGoldenStar: true,
-    tooltip: "Dominant Culture — click to explore",
-    detail: {
-      title: "Stars — Dominant Culture",
-      body: "Just as stars beyond our Sun illuminate the universe with their own ambient light, dominant culture casts its norms and values across social life — shaping what is seen as natural, desirable, or deviant without ever announcing itself. Its power lies in appearing self-evident.",
-      image: "", link: ""
     }
   },
 ];
@@ -716,16 +721,18 @@ const MOONS = [
 //    sub   — subtitle (smaller text)
 // ═══════════════════════════════════════════════════════════════════
 const HIDDEN_NODES = [
-  { x: 30, y: 48, label: "Throughlines",               sub: "Cross-cutting themes connecting all researchers" },
-  { x: 66, y: 28, label: "Theory",                     sub: "Thermal Zone — abstract conceptualization (inner)" },
-  { x: 50, y: 82, label: "Outward-facing Scholarship", sub: "Thermal Zone — academic production with public reach" },
-  { x: 87, y: 53, label: "Practice",                   sub: "Thermal Zone — community, social work & activism" },
-  { x: 10, y: 44, label: "Methodologies",              sub: "The Moons — how researchers gather evidence" },
-  { x: 55, y: 38, label: "Dark Matter",                sub: "Discourse — the invisible power shaping what can be said",
+  { x: 55, y: 38, label: "Dark Matter",  sub: "Discourse — invisible power shaping what can be said",
     isDarkMatter: true,
     detail: {
       title: "Dark Matter — Discourse",
       body: "Dark matter is invisible yet constitutes 85% of the universe's mass — its gravity binds everything together. Discourse works the same way: the unseen systems of language and power that determine what can be said, known, or imagined. It structures social reality from the inside, without ever appearing directly."
+    }
+  },
+  { x: 22, y: 62, label: "Stars", sub: "Dominant Culture — norms that illuminate social life",
+    isGoldenStar: true,
+    detail: {
+      title: "Stars — Dominant Culture",
+      body: "Just as stars beyond our Sun illuminate the universe with their own ambient light, dominant culture casts its norms and values across social life — shaping what is seen as natural, desirable, or deviant without ever announcing itself. Its power lies in appearing self-evident."
     }
   },
 ];
@@ -757,7 +764,7 @@ function resizeCanvas() {
 }
 
 function buildStars() {
-  stars = Array.from({ length: 320 }, () => ({
+  stars = Array.from({ length: 700 }, () => ({
     x:   Math.random() * canvas.width,
     y:   Math.random() * canvas.height,
     r:   Math.random() * 1.6 + 0.2,
@@ -1047,6 +1054,21 @@ function renderHiddenNodes() {
       el.addEventListener('mouseleave', hideTip);
       el.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
       layer.appendChild(el);
+    } else if (n.isGoldenStar) {
+      const el = document.createElement('div');
+      el.className = 'node node-golden-star h-golden-star';
+      // size: 4 → 8px diameter
+      el.style.cssText = `left: ${n.x}%; top: ${n.y}%; width:8px; height:8px; --c:#ffd700; background:#ffd700; box-shadow:none; cursor:pointer; pointer-events:auto;`;
+      const lbl = document.createElement('span');
+      lbl.className = 'node-label';
+      lbl.style.cssText = 'color:#ffd700; text-shadow:0 0 6px #ffd700; font-size:10px;';
+      lbl.textContent = n.label;
+      el.appendChild(lbl);
+      el.addEventListener('mouseenter', e => showTip(e, n.sub));
+      el.addEventListener('mousemove',  e => moveTip(e));
+      el.addEventListener('mouseleave', hideTip);
+      el.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
+      layer.appendChild(el);
     } else {
       const el = document.createElement('div');
       el.className = 'h-node';
@@ -1160,6 +1182,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 const telescopeOverlay = document.getElementById('telescope-overlay');
 const hiddenLayer      = document.getElementById('hidden-layer');
 const ringEl           = document.getElementById('telescope-ring');
+const cursorDot        = document.getElementById('telescope-cursor');
 const btnTelescope     = document.getElementById('btn-telescope');
 
 // 根据 LENS_R 设置镜头圆圈尺寸
@@ -1176,10 +1199,12 @@ btnTelescope.addEventListener('click', () => {
   if (teleActive) {
     hiddenLayer.classList.add('active');
     ringEl.classList.add('active');
+    cursorDot.classList.add('active');
     document.body.style.cursor = 'none';
   } else {
     hiddenLayer.classList.remove('active');
     ringEl.classList.remove('active');
+    cursorDot.classList.remove('active');
     hiddenLayer.style.clipPath      = 'none';
     telescopeOverlay.style.background = 'transparent';
     document.body.style.cursor = '';
@@ -1195,6 +1220,10 @@ document.addEventListener('mousemove', e => {
   // Move lens ring (visual)
   ringEl.style.left = x + 'px';
   ringEl.style.top  = y + 'px';
+
+  // Move cursor center dot
+  cursorDot.style.left = x + 'px';
+  cursorDot.style.top  = y + 'px';
 
   // Hidden layer: clip to lens circle only
   hiddenLayer.style.clipPath = `circle(${LENS_R}px at ${x}px ${y}px)`;
