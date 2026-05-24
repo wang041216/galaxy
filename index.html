@@ -184,6 +184,43 @@
     box-shadow: 0 0 30px 12px rgba(140,80,255,0.35);
   }
 
+  /* ── Meteorites hidden node ── */
+  .h-node-meteor {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #ffbb88;
+    font-size: 13px;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .h-node-meteor .h-meteor-rock {
+    width: 20px;
+    height: 15px;
+    background: radial-gradient(ellipse at 35% 35%, #ddaa77, #775533);
+    border-radius: 30% 70% 55% 45% / 50% 40% 60% 50%;
+    margin: 0 auto 6px;
+    box-shadow: 0 0 10px 3px rgba(255,100,30,0.45), 2px -2px 6px rgba(255,160,60,0.5);
+    animation: meteorFloat 2.8s ease-in-out infinite;
+  }
+  @keyframes meteorFloat {
+    0%,100% { transform: rotate(-8deg) scale(1);    box-shadow: 0 0 10px 3px rgba(255,100,30,0.45); }
+    50%      { transform: rotate(5deg)  scale(1.1);  box-shadow: 0 0 18px 6px rgba(255,130,40,0.65); }
+  }
+  .h-node-meteor .h-label {
+    text-shadow: 0 0 8px #ff8844;
+    font-size: 12px;
+  }
+  .h-node-meteor .h-sub {
+    font-size: 10px;
+    opacity: 0.65;
+    margin-top: 2px;
+    color: #cc9966;
+  }
+  .h-node-meteor:hover .h-meteor-rock {
+    box-shadow: 0 0 22px 8px rgba(255,130,40,0.7);
+  }
+
   /* ── 望远镜镜头圆圈 ── */
   #telescope-ring {
     position: fixed;
@@ -721,18 +758,26 @@ const MOONS = [
 //    sub   — subtitle (smaller text)
 // ═══════════════════════════════════════════════════════════════════
 const HIDDEN_NODES = [
-  { x: 55, y: 38, label: "Dark Matter",  sub: "Discourse — invisible power shaping what can be said",
+  // Outside orbits (orbitFrac max 0.43) — all positioned near page edges
+  { x: 8, y: 15, label: "Dark Matter",  sub: "Discourse — invisible power shaping what can be said",
     isDarkMatter: true,
     detail: {
       title: "Dark Matter — Discourse",
       body: "Dark matter is invisible yet constitutes 85% of the universe's mass — its gravity binds everything together. Discourse works the same way: the unseen systems of language and power that determine what can be said, known, or imagined. It structures social reality from the inside, without ever appearing directly."
     }
   },
-  { x: 22, y: 62, label: "Stars", sub: "Dominant Culture — norms that illuminate social life",
+  { x: 88, y: 80, label: "Stars", sub: "Dominant Culture — norms that illuminate social life",
     isGoldenStar: true,
     detail: {
       title: "Stars — Dominant Culture",
       body: "Just as stars beyond our Sun illuminate the universe with their own ambient light, dominant culture casts its norms and values across social life — shaping what is seen as natural, desirable, or deviant without ever announcing itself. Its power lies in appearing self-evident."
+    }
+  },
+  { x: 9, y: 82, label: "Meteorites", sub: "Differing Perspectives — questions that disrupt and deepen",
+    isMeteor: true,
+    detail: {
+      title: "Meteorites — Differing Perspectives",
+      body: "Meteorites can disrupt a planet’s surface — yet their impact may also lower toxicity and catalyse renewal. Here they represent the questions and dissenting perspectives that challenge a scholar’s theories. What seems disruptive often deepens the work and drives academic growth."
     }
   },
 ];
@@ -1058,12 +1103,26 @@ function renderHiddenNodes() {
       const el = document.createElement('div');
       el.className = 'node node-golden-star h-golden-star';
       // size: 4 → 8px diameter
-      el.style.cssText = `left: ${n.x}%; top: ${n.y}%; width:8px; height:8px; --c:#ffd700; background:#ffd700; box-shadow:none; cursor:pointer; pointer-events:auto;`;
+      el.style.cssText = `left: ${n.x}%; top: ${n.y}%; width:44px; height:44px; --c:#ffd700; background:#ffd700; box-shadow:none; cursor:pointer; pointer-events:auto;`;
       const lbl = document.createElement('span');
       lbl.className = 'node-label';
       lbl.style.cssText = 'color:#ffd700; text-shadow:0 0 6px #ffd700; font-size:10px;';
       lbl.textContent = n.label;
       el.appendChild(lbl);
+      el.addEventListener('mouseenter', e => showTip(e, n.sub));
+      el.addEventListener('mousemove',  e => moveTip(e));
+      el.addEventListener('mouseleave', hideTip);
+      el.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
+      layer.appendChild(el);
+    } else if (n.isMeteor) {
+      const el = document.createElement('div');
+      el.className = 'h-node-meteor';
+      el.style.cssText = `left: ${n.x}%; top: ${n.y}%;`;
+      el.innerHTML = `
+        <div class="h-meteor-rock"></div>
+        <div class="h-label">${n.label}</div>
+        <div class="h-sub">${n.sub}</div>
+      `;
       el.addEventListener('mouseenter', e => showTip(e, n.sub));
       el.addEventListener('mousemove',  e => moveTip(e));
       el.addEventListener('mouseleave', hideTip);
