@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -191,18 +191,80 @@
     cursor: pointer;
     pointer-events: auto;
   }
+  /* Fireball head — bright oval, white-hot center fading to orange */
   .h-node-meteor .h-meteor-rock {
-    width: 28px;
+    position: relative;
+    width: 30px;
     height: 22px;
-    background: radial-gradient(ellipse at 35% 35%, #ddaa77, #775533);
-    border-radius: 30% 70% 55% 45% / 50% 40% 60% 50%;
+    background: radial-gradient(ellipse at 48% 44%,
+      #ffffff   0%,
+      #fff5aa  12%,
+      #ffdd00  28%,
+      #ff8800  55%,
+      rgba(255,40,0,0.3) 80%,
+      transparent 100%
+    );
+    border-radius: 50%;
     margin: 0 auto 6px;
-    box-shadow: 0 0 10px 3px rgba(255,100,30,0.45), 2px -2px 6px rgba(255,160,60,0.5);
-    animation: meteorFloat 2.8s ease-in-out infinite;
+    box-shadow:
+      0 0 5px  3px  rgba(255, 240, 120, 1.0),
+      0 0 14px 7px  rgba(255, 130, 0,  0.85),
+      0 0 30px 14px rgba(255,  50, 0,  0.45),
+      0 0 55px 22px rgba(255,  20, 0,  0.18);
+    animation: meteorFloat 2.6s ease-in-out infinite;
+  }
+  /* Outer soft glow — lower-left tail (no rotation, geometry-exact) */
+  .h-node-meteor .h-meteor-rock::before {
+    content: '';
+    position: absolute;
+    /* tip lands at ~85px left + 65px down from fireball center = lower-left ~37° */
+    top: -25px;
+    left: -70px;
+    width: 85px;    /* right edge = -70+85 = 15px from rock TL = rock center-x */
+    height: 100px;  /* bottom = -25+100 = 75px from rock TL */
+    background: linear-gradient(to top right,
+      transparent                0%,
+      rgba(200,  40,  0, 0.12)  22%,
+      rgba(255, 110,  0, 0.38)  55%,
+      rgba(255, 190, 50, 0.52)  82%,
+      rgba(255, 220, 80, 0.48) 100%
+    );
+    /* tip at bottom-left (0%,100%), wide base at right edge (100%, 25%-75%) */
+    clip-path: polygon(0% 100%, 100% 25%, 100% 75%);
+    filter: blur(8px);
+    pointer-events: none;
+    z-index: -1;
+  }
+  /* Inner bright streak — narrow needle, lower-left */
+  .h-node-meteor .h-meteor-rock::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: -62px;
+    width: 77px;   /* right edge = -62+77 = 15px from rock TL = rock center-x */
+    height: 88px;  /* bottom = -15+88 = 73px from rock TL */
+    background: linear-gradient(to top right,
+      transparent                0%,
+      rgba(255, 100,   0, 0.22) 15%,
+      rgba(255, 200,  45, 0.72) 50%,
+      rgba(255, 252, 140, 0.92) 80%,
+      rgba(255, 255, 220, 1.00) 100%
+    );
+    /* tip at bottom-left (0%,100%), narrow base at right edge (100%, 43%-57%) */
+    clip-path: polygon(0% 100%, 100% 43%, 100% 57%);
+    filter: blur(1.5px);
+    pointer-events: none;
+    z-index: -1;
   }
   @keyframes meteorFloat {
-    0%,100% { transform: rotate(-8deg) scale(1);    box-shadow: 0 0 10px 3px rgba(255,100,30,0.45); }
-    50%      { transform: rotate(5deg)  scale(1.1);  box-shadow: 0 0 18px 6px rgba(255,130,40,0.65); }
+    0%,100% {
+      transform: scale(1);
+      box-shadow: 0 0 5px 3px rgba(255,240,120,1.0), 0 0 14px 7px rgba(255,130,0,0.85), 0 0 30px 14px rgba(255,50,0,0.45);
+    }
+    50% {
+      transform: scale(1.12);
+      box-shadow: 0 0 8px 5px rgba(255,255,160,1.0), 0 0 20px 10px rgba(255,160,0,0.95), 0 0 42px 18px rgba(255,70,0,0.6);
+    }
   }
   .h-node-meteor .h-label {
     text-shadow: 0 0 8px #ff8844;
@@ -212,7 +274,47 @@
     display: none;
   }
   .h-node-meteor:hover .h-meteor-rock {
-    box-shadow: 0 0 22px 8px rgba(255,130,40,0.7);
+    box-shadow: 0 0 10px 6px rgba(255,255,180,1.0), 0 0 26px 12px rgba(255,150,0,1.0), 0 0 50px 22px rgba(255,60,0,0.65);
+  }
+
+  /* ── Thermal Energy Gradient (question mark) hidden node ── */
+  .h-node-qmark {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .h-node-qmark .h-qmark-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid rgba(140, 210, 255, 0.85);
+    background: rgba(40, 90, 170, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 6px;
+    font-size: 22px;
+    font-weight: bold;
+    color: rgba(160, 225, 255, 0.95);
+    box-shadow: 0 0 12px 3px rgba(80, 170, 255, 0.4);
+    animation: qmarkPulse 2.5s ease-in-out infinite;
+    font-family: Georgia, serif;
+  }
+  @keyframes qmarkPulse {
+    0%,100% { box-shadow: 0 0 10px 3px rgba(80, 170, 255, 0.35); }
+    50%      { box-shadow: 0 0 22px 8px rgba(80, 170, 255, 0.65); }
+  }
+  .h-node-qmark .h-label {
+    color: #99ddff;
+    font-size: 11px;
+    text-shadow: 0 0 8px #44aaff;
+    white-space: nowrap;
+  }
+  .h-node-qmark:hover .h-qmark-circle {
+    box-shadow: 0 0 26px 9px rgba(80, 170, 255, 0.8);
+    color: #fff;
   }
 
   /* ── 望远镜镜头圆圈 ── */
@@ -289,6 +391,7 @@
 
   /* ── 弹窗卡片 ── */
   #modal-card {
+    cursor: default;
     background: linear-gradient(140deg, rgba(8,14,45,0.97), rgba(18,8,50,0.97));
     border: 1px solid rgba(100, 155, 255, 0.35);
     border-radius: 16px;
@@ -367,6 +470,13 @@
   .modal-section-value {
     font-size: 14px;
   }
+  .analysis-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #ccd6e8;
+    margin: 0;
+    font-style: italic;
+  }
   .methods-grid {
     display: flex;
     flex-wrap: wrap;
@@ -383,6 +493,46 @@
     font-size: 13px;
     color: #d8e8ff;
   }
+  .tl-pill {
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .tl-pill:hover {
+    background: rgba(255,255,255,0.13);
+    border-color: color-mix(in srgb, var(--mc) 75%, transparent);
+  }
+  #tl-popup {
+    display: none; position: fixed; z-index: 10000; inset: 0;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.52);
+  }
+  #tl-popup.active { display: flex; }
+  #tl-popup-card {
+    background: rgba(10,20,45,0.98);
+    border: 1px solid rgba(100,160,220,0.45);
+    border-radius: 14px; padding: 20px 24px;
+    max-width: 340px; width: 88%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    position: relative;
+  }
+  #tl-popup-swatch {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 7px; vertical-align: middle;
+    box-shadow: 0 0 6px currentColor;
+  }
+  #tl-popup-name {
+    font-size: 15px; font-weight: 700; color: #ddeeff;
+    margin-bottom: 11px; padding-right: 22px; line-height: 1.3;
+  }
+  #tl-popup-body {
+    font-size: 13px; line-height: 1.7; color: #99bbdd;
+  }
+  #tl-popup-close {
+    position: absolute; top: 10px; right: 14px;
+    background: none; border: none; color: #778899;
+    font-size: 20px; cursor: pointer; line-height: 1; padding: 0;
+  }
+  #tl-popup-close:hover { color: #fff; }
   .moon-dot {
     display: inline-block;
     width: 9px;
@@ -401,6 +551,31 @@
   .score-track { flex: 1; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
   .score-fill  { height: 100%; border-radius: 3px; transition: width 0.4s; }
   .score-num   { font-size: 11px; color: #aac; width: 28px; text-align: right; flex-shrink: 0; }
+  .score-hint {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1px solid rgba(100, 160, 220, 0.7);
+    color: rgba(130, 185, 230, 0.9); font-size: 9px; font-weight: bold;
+    cursor: default; margin-left: 5px;
+    position: relative; vertical-align: middle;
+    font-family: Georgia, serif; font-style: italic; flex-shrink: 0;
+  }
+  .score-hint::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 7px); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(18, 30, 55, 0.97);
+    color: #b8d4f0; font-size: 11px; font-weight: normal; font-style: normal;
+    font-family: inherit; line-height: 1.55;
+    padding: 8px 11px; border-radius: 8px;
+    border: 1px solid rgba(80, 140, 200, 0.4);
+    white-space: normal; width: 210px;
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.18s;
+    z-index: 9999;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+  }
+  .score-hint:hover::after { opacity: 1; }
 
   /* ── 控制按钮 ── */
   #controls {
@@ -506,6 +681,15 @@
   </div>
 </div>
 
+<!-- Throughline definition popup -->
+<div id="tl-popup">
+  <div id="tl-popup-card">
+    <button id="tl-popup-close">×</button>
+    <div id="tl-popup-name"><span id="tl-popup-swatch"></span><span id="tl-popup-name-text"></span></div>
+    <div id="tl-popup-body"></div>
+  </div>
+</div>
+
 <!-- Telescope toggle -->
 <div id="controls">
   <button id="btn-telescope">🔭 Telescope Mode</button>
@@ -545,7 +729,7 @@ const SUN = {
   tooltip: "The central research field — click to explore",
   detail: {
     title: "Gender & Sexuality Studies",
-    body: "This visualization maps the research network of professors in the field of Gender & Sexuality Studies.\n\nPlanets = Professors\nMoons = Methodologies / Sources of Evidence\nThermal Energy Gradient = Modes of Conceptualization\n(Theory → Outward-facing Scholarship → Practice)\nStars = Dominant Culture\nBlack Hole = Hegemonic Systems (Hetero & cis normativity)\nDark Matter = Discursive Power\nMeteorites = Differing Perspectives\n\nHover to preview — click for full detail.",
+    body: "As the sun, gender and sexuality acts like a lens through which we can analyze different topics, illuminating (and providing the color for) each professor's work.",
     image: "",
     link: ""
   }
@@ -560,6 +744,18 @@ const SUN = {
 //  belt      : Sphere of Influence label (null = none)
 //  beltColor : color of the sphere-of-influence ring
 // ═══════════════════════════════════════════════════════════════════
+
+// Throughline glossary — shown on pill click
+const THROUGHLINE_GLOSSARY = {
+  'Institutionality':                       'Examines how formal structures regulate and normalize gender and sexuality. Scholars ask whose bodies are disciplined, included, or expelled by these systems.',
+  'Social norms':                           'Exposes the unspoken rules that make gendered and sexual behavior feel natural while punishing deviation.',
+  'Radicalization':                         'Challenges power structures at the root rather than seeking incremental reform, questioning the very categories of gender and sex.',
+  'Autonomy':                               'Centers the right to define one\'s own body, identity, and desire free from coercion.',
+  'Fear':                                   'Traces how shame, stigma, and state violence police nonconforming bodies and suppress dissent. Fear is analyzed as a mechanism for maintaining hierarchies and enforcing normativity.',
+  'Erotic':                                 'Drawing on Audre Lorde, treats the erotic as a bodily source of knowledge and power. It reclaims pleasure and intimacy as legitimate modes of knowing.',
+  'Crossing of boundaries/Diversification': 'Celebrates movement across fixed categories of gender, race, and sexuality.',
+  'Interpersonality':                       'Foregrounds the relational dimension of gender and sexuality — how identities are formed and negotiated through social bonds, care, and conflict between subjects.',
+};
 
 // Throughline colour palette
 const THROUGHLINE_COLORS = {
@@ -585,6 +781,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Ray Briggs",
       body: "Week 6 | April 28\n\nThermal Zone: Theory\n\nMethodologies (Moons): Philosophy · Podcast",
+      analysis: "We appreciated Dr. Briggs\u2019 creative and unique approach to gender construction through the conception of \u201cgender feels\u201d and felt that this approach was very radical. While this creates a more inclusive framework, we felt that they did not consider how this framework could realistically be applied in the practical sphere. We also felt Dr. Briggs based some of their ideas on assumptions that were not sufficiently supported, leaving us with unanswered questions about their framework.",
       image: "", link: ""
     }
   },
@@ -599,6 +796,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Johnathan Flatley",
       body: "Week 5 | April 21\n\nThermal Zone: Theory\n\nMethodologies (Moons): Comparatism · Art History",
+      analysis: "We appreciated Dr. Flatley\u2019s incorporation of STAR and queerness in interpreting Andy Warhol\u2019s Ladies and Gentleman, and the novel insights produced as a result. Dr. Flatley, however, was somewhat dismissive of critical questions posed about the focus of his work. We asked, \u201cCan art that emerges from inequality still be liberatory, and if so, how?\u201d While we felt this is an important line of questioning, Dr. Flatley appeared apprehensive in exploring questions that could challenge the conclusions of his work. He treated any further questioning as superfluous.",
       image: "", link: ""
     }
   },
@@ -613,6 +811,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Kaneesha Parsard",
       body: "Week 3 | April 7\n\nThermal Zone: Theory (a bit outward-facing)\n\nMethodologies (Moons): Archival Sociology",
+      analysis: "As a group we believe that Dr. Parsard\u2019s focus on the desire of marginalized peoples was radical, however, Dr. Parsard\u2019s framework works within a system. Her text centers figures who are marginalized by colonial and liberal narratives\u2014especially since she researches Women of African descent, indentured laborers, and those who live outside normative structures. She treats these women\u2019s desires, improvisations, and her classification as \u201csmall acts\u201d as legitimate political and aesthetic strategies. Furthermore, Dr. Parsard distances herself from classical liberalism and total revolution, as her work focuses on a \u201clower register of politics\u201d\u2014defiance without full transformation.",
       image: "", link: ""
     }
   },
@@ -627,6 +826,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Joeseph Dov Brusch",
       body: "Week 8 | May 12\n\nThermal Zone: Outward-facing Scholarship\n\nMethodologies (Moons): Public Health · Quantitative Research",
+      analysis: "Dr. Brusch brought our attention to a commonly discussed issue within the world of gender and sexuality\u2014women\u2019s healthcare\u2014from a new perspective that placed these issues within a financial frame. While we appreciated that his work challenges perceptions about capitalism, privacy, private equity and VC, and tech in healthcare, we were disappointed in the overall execution. He did not discuss specifics or present in-depth explanations of potential harms and critiques. Specifically, he left out the potential femtech has to widen gaps in healthcare access between White women and women of color. He also only touched minimally on the day-to-day experiences of the women using femtech. When we tried to delve deeper into these issues, we felt he redirected questions at us rather than considering how our perspectives could be incorporated.",
       image: "", link: ""
     }
   },
@@ -641,6 +841,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Kristen Schilt",
       body: "Week 4 | April 14\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): Documentary · Research · Semi-structured Interviews · Sociology",
+      analysis: "Overall we appreciated Dr. Schilt\u2019s focus on the trans community and the ways in which their daily lives are affected because their identities do not fit conventional social norms, and we appreciated that Dr. Schilt took the time to engage individually with people. We also appreciated that Dr. Schilt\u2019s work extended to archival research that exposed information that many people do not know exists, as well as demonstrated the humanity in each individual affected by our discourse. We were disappointed, however, that only trans men were interviewed and that there was a lack of racial diversity among the interviewees.",
       image: "", link: ""
     }
   },
@@ -655,6 +856,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Red Vaughan Tremmel",
       body: "Week 1 | March 24\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): History · Documentary · Interviews",
+      analysis: "We felt that, given Dr. Tremmel\u2019s focus on Burlesque dancers at Exotic World, the documentary was thoughtfully executed in its attentiveness to the interviewees and the selection of diverse perspectives. We appreciated the choice to center the dancers and their storytelling in driving the documentary\u2019s direction with limited third-party narration. We felt that the topic of the documentary inherently challenged existing social structures by focusing on individuals and labor that are often overlooked, marginalized, and demonized within society.",
       image: "", link: ""
     }
   },
@@ -669,6 +871,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Lisa Moore",
       body: "Week 7 | May 5\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): Ethnography · Blog · Social Work · Consulting",
+      analysis: "We appreciated Dr. Moore\u2019s presentation and work itself because of its wide-reaching quality and integration of critical perspectives. Her work includes recognition of some radical-leaning ideas that challenge conventional expectations of Black women, and she did so at multiple levels: institutionally and personally. She also worked to address many of the issues faced in the queer community at their roots by directly disrupting the cycle of disconnect between generations.",
       image: "", link: ""
     }
   },
@@ -683,6 +886,7 @@ const ORBIT_PLANETS = [
     detail: {
       title: "Dr. Eman Abdelhadi",
       body: "Week 2 | March 31\n\nThermal Zone: Theory · Practice\n\nMethodologies (Moons): Interviews · Organizing",
+      analysis: "We thought Dr. Abdelhadi\u2019s scholarly work and class discussion were very radical in nature as she was unapologetic in her oppositional stance against institutions like UChicago in pursuit of her scholarship and activism, and she repeatedly expressed her desire to tear down oppressive systems. Furthermore, it seems that she uses her scholarship as a way to inform her activism. We felt at times that her choice to categorize Muslim Americans into strict typologies was unhelpful. Moreover, her (justifiably) inflexible and assertive communication style could be perceived as polarizing or reductive, even as these approaches strengthen the impact of her activism.",
       image: "", link: ""
     }
   },
@@ -743,30 +947,37 @@ const HIDDEN_NODES = [
     isBlackHole: true,
     tooltip: "Where gravity is so strong not even light can escape",
     detail: {
-      title: "Black Hole",
-      body: "A black hole is a region of spacetime where gravity is so intense that nothing — not even light — can escape once it crosses the event horizon. The first image of a black hole (M87*) was captured by the Event Horizon Telescope in 2019.",
-      image: "", link: "https://en.wikipedia.org/wiki/Black_hole"
+      title: "Hegemonic Systems (Black Hole)",
+      body: "The black hole in this galaxy represents the hegemonic systems that pull against the universe, attempting to consume or regulate discourse in opposition to the gravitational pull of the sun (representing gender and sexuality).",
+      image: "", link: ""
     }
   },
   { x: 8, y: 15, label: "Dark Matter",  sub: "Discourse — invisible power shaping what can be said",
     isDarkMatter: true,
     detail: {
-      title: "Dark Matter — Discourse",
-      body: "Dark matter is invisible yet constitutes 85% of the universe's mass — its gravity binds everything together. Discourse works the same way: the unseen systems of language and power that determine what can be said, known, or imagined. It structures social reality from the inside, without ever appearing directly."
+      title: "Discourse (Dark Matter)",
+      body: "Dark matter comprises 85% of the universe. It is an invisible and mysterious form of matter that holds the stars, planets, and other components of the universe together. Discourse permeates through our society much like dark matter and often acts as an invisible form of power."
     }
   },
   { x: 88, y: 80, label: "Stars", sub: "Dominant Culture — norms that illuminate social life",
     isGoldenStar: true,
     detail: {
-      title: "Stars — Dominant Culture",
-      body: "Just as stars beyond our Sun illuminate the universe with their own ambient light, dominant culture casts its norms and values across social life — shaping what is seen as natural, desirable, or deviant without ever announcing itself. Its power lies in appearing self-evident."
+      title: "Dominant Culture (Stars)",
+      body: "Stars, like the sun, serve as interpretive lenses that illuminate the universe and shape our perceptions of it. Dominant culture functions similarly, establishing norms and values that structure our perceptions of lived experience."
     }
   },
   { x: 9, y: 82, label: "Meteorites", sub: "Differing Perspectives — questions that disrupt and deepen",
     isMeteor: true,
     detail: {
-      title: "Meteorites — Differing Perspectives",
-      body: "Meteorites can disrupt a planet’s surface — yet their impact may also lower toxicity and catalyse renewal. Here they represent the questions and dissenting perspectives that challenge a scholar’s theories. What seems disruptive often deepens the work and drives academic growth."
+      title: "Differing Perspectives (Meteorites)",
+      body: "Meteorites have the ability to disrupt the makeup and livability of a planet, but can also generate new forms of life as a result. They represent questions and perspectives differing from the authors\u2019 theories and conclusions. Even though questions and conflicting perspectives may seem disruptive, they can help deepen theories and encourage growth as academics."
+    }
+  },
+  { x: 25, y: 50, label: "Thermal Energy", sub: "Modes of Conceptualization — theory vs. practice spectrum",
+    isQuestionMark: true,
+    detail: {
+      title: "Modes of Conceptualization (Thermal Energy Gradient)",
+      body: "When a planet is closer to the sun, the surrounding atmosphere becomes more concentrated with thermal energy. In this framework, planets surrounded by greater thermal energy represent scholarship more embedded within theory and abstract thought, while planets farther away (exposed to less concentrated energy) symbolize work grounded in real-world practice and application."
     }
   },
 ];
@@ -1083,6 +1294,100 @@ function updateOrbitPlanets(t) {
   });
 }
 
+function drawMeteor(ctx, W, H) {
+  // Fireball center — shifted inward so halo (rx 44) stays within canvas
+  const fx = W * 0.70, fy = H * 0.32;
+  // Tail tip — lower-left
+  const tx = W * 0.06, ty = H * 0.90;
+
+  const dx = fx - tx, dy = fy - ty;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  const ux = dx/len, uy = dy/len;   // unit: tip → fireball
+  const px = -uy,    py =  ux;      // perpendicular
+
+  // 1. Wide outer glow trail
+  const gOut = ctx.createLinearGradient(tx, ty, fx, fy);
+  gOut.addColorStop(0,    'rgba(160, 30,  0, 0)');
+  gOut.addColorStop(0.18, 'rgba(200, 55,  0, 0.12)');
+  gOut.addColorStop(0.45, 'rgba(255,100,  0, 0.38)');
+  gOut.addColorStop(0.75, 'rgba(255,170, 20, 0.52)');
+  gOut.addColorStop(1,    'rgba(255,210, 55, 0.48)');
+  ctx.save();
+  ctx.filter = 'blur(9px)';
+  ctx.beginPath();
+  ctx.moveTo(tx, ty);
+  ctx.lineTo(fx + px*22, fy + py*22);
+  ctx.lineTo(fx - px*22, fy - py*22);
+  ctx.closePath();
+  ctx.fillStyle = gOut;
+  ctx.fill();
+  ctx.restore();
+
+  // 2. Mid glow trail
+  const gMid = ctx.createLinearGradient(tx, ty, fx, fy);
+  gMid.addColorStop(0,    'rgba(180, 50,  0, 0)');
+  gMid.addColorStop(0.22, 'rgba(230, 80,  0, 0.18)');
+  gMid.addColorStop(0.52, 'rgba(255,150, 10, 0.55)');
+  gMid.addColorStop(0.82, 'rgba(255,210, 50, 0.70)');
+  gMid.addColorStop(1,    'rgba(255,240,100, 0.65)');
+  ctx.save();
+  ctx.filter = 'blur(4px)';
+  ctx.beginPath();
+  ctx.moveTo(tx, ty);
+  ctx.lineTo(fx + px*12, fy + py*12);
+  ctx.lineTo(fx - px*12, fy - py*12);
+  ctx.closePath();
+  ctx.fillStyle = gMid;
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Inner bright needle streak
+  const gCore = ctx.createLinearGradient(tx, ty, fx, fy);
+  gCore.addColorStop(0,    'rgba(200, 60,  0, 0)');
+  gCore.addColorStop(0.20, 'rgba(255,110,  0, 0.30)');
+  gCore.addColorStop(0.50, 'rgba(255,210, 50, 0.82)');
+  gCore.addColorStop(0.80, 'rgba(255,252,140, 0.96)');
+  gCore.addColorStop(1,    'rgba(255,255,230, 1)');
+  ctx.save();
+  ctx.filter = 'blur(1px)';
+  ctx.beginPath();
+  ctx.moveTo(tx, ty);
+  ctx.lineTo(fx + px*5, fy + py*5);
+  ctx.lineTo(fx - px*5, fy - py*5);
+  ctx.closePath();
+  ctx.fillStyle = gCore;
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Fireball — large outer halo
+  const gHalo = ctx.createRadialGradient(fx, fy, 0, fx, fy, 44);
+  gHalo.addColorStop(0,    'rgba(255,255,255, 1)');
+  gHalo.addColorStop(0.18, 'rgba(255,240,120, 1)');
+  gHalo.addColorStop(0.42, 'rgba(255,120,  0, 0.85)');
+  gHalo.addColorStop(0.68, 'rgba(255, 40,  0, 0.45)');
+  gHalo.addColorStop(0.88, 'rgba(200, 10,  0, 0.15)');
+  gHalo.addColorStop(1,    'rgba(150,  0,  0, 0)');
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(fx, fy, 44, 36, 0, 0, Math.PI*2);
+  ctx.fillStyle = gHalo;
+  ctx.fill();
+  ctx.restore();
+
+  // 5. Fireball — tight bright core
+  const gFire = ctx.createRadialGradient(fx, fy, 0, fx, fy, 16);
+  gFire.addColorStop(0,    'rgba(255,255,255, 1)');
+  gFire.addColorStop(0.30, 'rgba(255,252,200, 1)');
+  gFire.addColorStop(0.65, 'rgba(255,180, 30, 0.9)');
+  gFire.addColorStop(1,    'rgba(255,100,  0, 0)');
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(fx, fy, 16, 13, 0, 0, Math.PI*2);
+  ctx.fillStyle = gFire;
+  ctx.fill();
+  ctx.restore();
+}
+
 function renderHiddenNodes() {
   const layer = document.getElementById('hidden-layer');
   layer.innerHTML = '';
@@ -1134,13 +1439,30 @@ function renderHiddenNodes() {
       wrap.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
       layer.appendChild(wrap);
     } else if (n.isMeteor) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = `position:absolute; left:${n.x}%; top:${n.y}%; transform:translate(-50%,-50%); cursor:pointer; pointer-events:auto; text-align:center;`;
+      const cvs = document.createElement('canvas');
+      cvs.width  = 220;
+      cvs.height = 160;
+      cvs.style.cssText = 'display:block; pointer-events:none;';
+      drawMeteor(cvs.getContext('2d'), 220, 160);
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'color:#ffbb88; font-size:12px; text-shadow:0 0 8px #ff8844; margin-top:-18px; letter-spacing:1px;';
+      lbl.textContent = n.label;
+      wrap.appendChild(cvs);
+      wrap.appendChild(lbl);
+      wrap.addEventListener('mouseenter', e => showTip(e, n.sub));
+      wrap.addEventListener('mousemove',  e => moveTip(e));
+      wrap.addEventListener('mouseleave', hideTip);
+      wrap.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
+      layer.appendChild(wrap);
+    } else if (n.isQuestionMark) {
       const el = document.createElement('div');
-      el.className = 'h-node-meteor';
+      el.className = 'h-node-qmark';
       el.style.cssText = `left: ${n.x}%; top: ${n.y}%;`;
       el.innerHTML = `
-        <div class="h-meteor-rock"></div>
+        <div class="h-qmark-circle">?</div>
         <div class="h-label">${n.label}</div>
-        <div class="h-sub">${n.sub}</div>
       `;
       el.addEventListener('mouseenter', e => showTip(e, n.sub));
       el.addEventListener('mousemove',  e => moveTip(e));
@@ -1214,7 +1536,7 @@ function openModal(n) {
       html += `<div class="modal-section"><span class="modal-section-label">🔗 Throughlines</span><div class="methods-grid">`;
       n.throughlines.forEach(t => {
         const tc = THROUGHLINE_COLORS[t] || '#888';
-        html += `<div class="method-pill" style="--mc:${tc}"><span class="moon-dot" style="background:${tc}"></span>${t}</div>`;
+        html += `<div class="method-pill tl-pill" style="--mc:${tc}" onclick="showTLPopup('${t.replace(/'/g, "&#39;")}')"><span class="moon-dot" style="background:${tc}"></span>${t}</div>`;
       });
       html += `</div></div>`;
     }
@@ -1229,16 +1551,20 @@ function openModal(n) {
       const gravColor = `hsl(${260 + n.gravity * 4}, 75%, 65%)`;
       html += `<div class="modal-section"><span class="modal-section-label">Scores</span>
         <div class="score-row">
-          <span class="score-label">Toxicity Score <span style="color:#556;font-size:10px">(lower = more livable)</span></span>
+          <span class="score-label">Toxicity Score <span class="score-hint" data-tip="Measures how hostile or exclusionary the scholarly environment can be. Lower scores indicate more welcoming, livable academic spaces.">?</span></span>
           <div class="score-track"><div class="score-fill" style="width:${toxPct}%;background:${toxColor}"></div></div>
           <span class="score-num">${n.toxicity}/10</span>
         </div>
         <div class="score-row">
-          <span class="score-label">Gravitational Pull <span style="color:#556;font-size:10px">(higher = more radical)</span></span>
+          <span class="score-label">Gravitational Pull <span class="score-hint" data-tip="Reflects the ideological pull of this scholarship — how forcefully it challenges dominant norms. Higher scores signal more radical, transformative work.">?</span></span>
           <div class="score-track"><div class="score-fill" style="width:${gravPct}%;background:${gravColor}"></div></div>
           <span class="score-num">${n.gravity}/10</span>
         </div>
       </div>`;
+    }
+
+    if (n.detail.analysis) {
+      html += `<div class="modal-section"><span class="modal-section-label">💬 Group Reflection</span><p class="analysis-text">${n.detail.analysis}</p></div>`;
     }
   } else {
     html = `<p class="body-text">${n.detail.body}</p>`;
@@ -1316,6 +1642,36 @@ document.addEventListener('mousemove', e => {
     )
   `;
 });
+
+document.addEventListener('contextmenu', e => {
+  if (!teleActive) return;
+  e.preventDefault();
+  btnTelescope.click();
+});
+
+// ── Throughline definition popup ─────────────
+(function() {
+  const popup   = document.getElementById('tl-popup');
+  const swatch  = document.getElementById('tl-popup-swatch');
+  const nameEl  = document.getElementById('tl-popup-name-text');
+  const bodyEl  = document.getElementById('tl-popup-body');
+  const closeBtn = document.getElementById('tl-popup-close');
+
+  window.showTLPopup = function(name) {
+    const color = THROUGHLINE_COLORS[name] || '#888';
+    const text  = THROUGHLINE_GLOSSARY[name] || '';
+    swatch.style.background = color;
+    swatch.style.boxShadow  = `0 0 6px ${color}`;
+    nameEl.textContent = name;
+    bodyEl.textContent = text;
+    popup.classList.add('active');
+  };
+
+  function closeTLPopup() { popup.classList.remove('active'); }
+  closeBtn.addEventListener('click', closeTLPopup);
+  popup.addEventListener('click', e => { if (e.target === popup) closeTLPopup(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTLPopup(); });
+})();
 
 // ── Main animation loop ──────────────────────
 function animate(ts) {
