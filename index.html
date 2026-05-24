@@ -533,22 +533,7 @@
 //      .image   — image URL (leave "" to hide)
 //      .link    — external link (leave "" to hide)
 // ═══════════════════════════════════════════════════════════════════
-const NODES = [
-  {
-    x: 88, y: 12,
-    label: "Black Hole",
-    color: "#9955ff",
-    size: 44,
-    isBlackHole: true,
-    tooltip: "Where gravity is so strong not even light can escape",
-    detail: {
-      title: "Black Hole",
-      body: "A black hole is a region of spacetime where gravity is so intense that nothing — not even light — can escape once it crosses the event horizon. The first image of a black hole (M87*) was captured by the Event Horizon Telescope in 2019.",
-      image: "",
-      link: "https://en.wikipedia.org/wiki/Black_hole"
-    }
-  },
-];
+const NODES = [];
 
 // ═══════════════════════════════════════════════════════════════════
 //  ★ CENTRAL SUN — the body at the center of the page ★
@@ -753,6 +738,16 @@ const MOONS = [
 // ═══════════════════════════════════════════════════════════════════
 const HIDDEN_NODES = [
   // Outside orbits (orbitFrac max 0.43) — all positioned near page edges
+  { x: 88, y: 12,
+    label: "Black Hole", color: "#9955ff", size: 44,
+    isBlackHole: true,
+    tooltip: "Where gravity is so strong not even light can escape",
+    detail: {
+      title: "Black Hole",
+      body: "A black hole is a region of spacetime where gravity is so intense that nothing — not even light — can escape once it crosses the event horizon. The first image of a black hole (M87*) was captured by the Event Horizon Telescope in 2019.",
+      image: "", link: "https://en.wikipedia.org/wiki/Black_hole"
+    }
+  },
   { x: 8, y: 15, label: "Dark Matter",  sub: "Discourse — invisible power shaping what can be said",
     isDarkMatter: true,
     detail: {
@@ -907,7 +902,8 @@ function drawBg(t) {
     ctx.fill();
   });
 
-  // Black hole — dark disk + accretion ring (behind DOM node at 92%, 8%)
+  // Black hole — dark disk + accretion ring (telescope-only)
+  if (teleActive) {
   const bhX = canvas.width  * 0.88;
   const bhY = canvas.height * 0.12;
   const bhGrad = ctx.createRadialGradient(bhX, bhY, 0, bhX, bhY, 144);
@@ -931,6 +927,7 @@ function drawBg(t) {
   ctx.lineWidth = 20;
   ctx.stroke();
   ctx.restore();
+  } // end teleActive black hole
 
   // Stars with twinkling
   stars.forEach(s => {
@@ -1091,7 +1088,21 @@ function renderHiddenNodes() {
   layer.innerHTML = '';
 
   HIDDEN_NODES.forEach(n => {
-    if (n.isDarkMatter) {
+    if (n.isBlackHole) {
+      const el = document.createElement('div');
+      el.className = 'node node-bh';
+      el.style.cssText = `position:absolute; left:${n.x}%; top:${n.y}%; width:${n.size*2}px; height:${n.size*2}px; transform:translate(-50%,-50%); --c:${n.color}; cursor:pointer; pointer-events:auto;`;
+      const lbl = document.createElement('span');
+      lbl.className = 'node-label';
+      lbl.style.cssText = `color:${n.color}; text-shadow:0 0 8px ${n.color};`;
+      lbl.textContent = n.label;
+      el.appendChild(lbl);
+      el.addEventListener('mouseenter', e => showTip(e, n.tooltip));
+      el.addEventListener('mousemove',  e => moveTip(e));
+      el.addEventListener('mouseleave', hideTip);
+      el.addEventListener('click', e => { e.stopPropagation(); openModal(n); });
+      layer.appendChild(el);
+    } else if (n.isDarkMatter) {
       const el = document.createElement('div');
       el.className = 'h-node-dm';
       el.style.cssText = `left: ${n.x}%; top: ${n.y}%;`;
