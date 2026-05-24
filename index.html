@@ -803,14 +803,18 @@ function resizeCanvas() {
 }
 
 function buildStars() {
-  stars = Array.from({ length: 700 }, () => ({
-    x:   Math.random() * canvas.width,
-    y:   Math.random() * canvas.height,
-    r:   Math.random() * 1.6 + 0.2,
-    a:   Math.random(),
-    spd: Math.random() * 0.006 + 0.002,
-    ph:  Math.random() * Math.PI * 2
-  }));
+  stars = Array.from({ length: 900 }, () => {
+    const bright = Math.random() < 0.18;   // ~18% are noticeably bright
+    return {
+      x:   Math.random() * canvas.width,
+      y:   Math.random() * canvas.height,
+      r:   bright ? Math.random() * 1.4 + 1.2 : Math.random() * 1.0 + 0.2,
+      a:   bright ? Math.random() * 0.35 + 0.65 : Math.random() * 0.55 + 0.25,
+      spd: Math.random() * 0.006 + 0.002,
+      ph:  Math.random() * Math.PI * 2,
+      bright
+    };
+  });
 
   const colors = [
     '70,50,180,', '180,55,100,', '35,75,190,',
@@ -930,11 +934,19 @@ function drawBg(t) {
 
   // Stars with twinkling
   stars.forEach(s => {
-    const tw = 0.35 + 0.65 * Math.sin(t * s.spd * 60 + s.ph);
+    const tw = 0.45 + 0.55 * Math.sin(t * s.spd * 60 + s.ph);
+    const alpha = Math.min(1, s.a * tw);
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(215,230,255,${(s.a * tw).toFixed(2)})`;
+    ctx.fillStyle = `rgba(225,238,255,${alpha.toFixed(2)})`;
     ctx.fill();
+    // Extra glow ring for bright stars
+    if (s.bright) {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r * 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,220,255,${(alpha * 0.18).toFixed(2)})`;
+      ctx.fill();
+    }
   });
 
   // Moons — drawn on top of stars, relative to current planet positions
