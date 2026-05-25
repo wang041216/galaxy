@@ -596,7 +596,23 @@
     letter-spacing: 1px;
     backdrop-filter: blur(6px);
     transition: all 0.2s;
+    position: relative;
   }
+  #btn-telescope[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 10px); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 20, 45, 0.97);
+    color: #b8d4f0; font-size: 12px; line-height: 1.65;
+    padding: 10px 14px; border-radius: 10px;
+    border: 1px solid rgba(80, 140, 200, 0.4);
+    white-space: normal; width: 270px;
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.2s; z-index: 200;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+    text-align: left; font-weight: normal; letter-spacing: 0;
+  }
+  #btn-telescope:hover[data-tip]::after { opacity: 1; }
 
   #btn-telescope:hover {
     background: rgba(20, 40, 90, 0.82);
@@ -692,7 +708,7 @@
 
 <!-- Telescope toggle -->
 <div id="controls">
-  <button id="btn-telescope">🔭 Telescope Mode</button>
+  <button id="btn-telescope" data-tip="Gender studies is a practice of making the invisible visible — of looking past dominant narratives to find the lives and ideas pushed to the margins. The telescope reveals what exists just outside the ordinary view.">🔭 Telescope Mode</button>
 </div>
 
 <!-- Usage hint -->
@@ -723,10 +739,10 @@ const NODES = [];
 //  ★ CENTRAL SUN — the body at the center of the page ★
 // ═══════════════════════════════════════════════════════════════════
 const SUN = {
-  label: "Gender & Sex",
+  label: "Gender & Sexuality",
   color: "#ffdd33",
   size: 42,
-  tooltip: "The central research field — click to explore",
+  tooltip: "The central research field",
   detail: {
     title: "Gender & Sexuality Studies",
     body: "As the sun, gender and sexuality acts like a lens through which we can analyze different topics, illuminating (and providing the color for) each professor's work.",
@@ -747,26 +763,26 @@ const SUN = {
 
 // Throughline glossary — shown on pill click
 const THROUGHLINE_GLOSSARY = {
-  'Institutionality':                       'Examines how formal structures regulate and normalize gender and sexuality. Scholars ask whose bodies are disciplined, included, or expelled by these systems.',
-  'Social norms':                           'Exposes the unspoken rules that make gendered and sexual behavior feel natural while punishing deviation.',
-  'Radicalization':                         'Challenges power structures at the root rather than seeking incremental reform, questioning the very categories of gender and sex.',
-  'Autonomy':                               'Centers the right to define one\'s own body, identity, and desire free from coercion.',
-  'Fear':                                   'Traces how shame, stigma, and state violence police nonconforming bodies and suppress dissent. Fear is analyzed as a mechanism for maintaining hierarchies and enforcing normativity.',
-  'Erotic':                                 'Drawing on Audre Lorde, treats the erotic as a bodily source of knowledge and power. It reclaims pleasure and intimacy as legitimate modes of knowing.',
-  'Crossing of boundaries/Diversification': 'Celebrates movement across fixed categories of gender, race, and sexuality.',
-  'Interpersonality':                       'Foregrounds the relational dimension of gender and sexuality — how identities are formed and negotiated through social bonds, care, and conflict between subjects.',
+  'Institutionality':                          'Examines how formal structures regulate and normalize gender and sexuality. Scholars ask whose bodies are disciplined, included, or expelled by these systems.',
+  'Social Norms':                              'Exposes the unspoken rules that make gendered and sexual behavior feel natural while punishing deviation.',
+  'Radicalization':                            'Challenges power structures at the root rather than seeking incremental reform, questioning the very categories of gender and sex.',
+  'Autonomy':                                  'Centers the right to define one\'s own body, identity, and desire free from coercion.',
+  'Fear':                                      'Traces how shame, stigma, and state violence police nonconforming bodies and suppress dissent. Fear is analyzed as a mechanism for maintaining hierarchies and enforcing normativity.',
+  'The Erotic':                                'Drawing on Audre Lorde, treats the erotic as a bodily source of knowledge and power. It reclaims pleasure and intimacy as legitimate modes of knowing.',
+  'Crossing of Boundaries & Diversification':  'Celebrates movement across fixed categories of gender, race, and sexuality.',
+  'Interpersonality':                          'Foregrounds the relational dimension of gender and sexuality — how identities are formed and negotiated through social bonds, care, and conflict between subjects.',
 };
 
 // Throughline colour palette
 const THROUGHLINE_COLORS = {
-  'Institutionality':                       '#ff8800',  // orange
-  'Social norms':                           '#dd2299',  // magenta
-  'Radicalization':                         '#cc1133',  // crimson
-  'Autonomy':                               '#ffdd00',  // yellow
-  'Fear':                                   '#cc4400',  // blood orange
-  'Erotic':                                 '#4488ff',  // blue
-  'Crossing of boundaries/Diversification': '#44cc88',  // green
-  'Interpersonality':                       '#aa88ff',  // lavender
+  'Institutionality':                          '#ff8800',  // orange
+  'Social Norms':                              '#dd2299',  // magenta
+  'Radicalization':                            '#cc1133',  // crimson
+  'Autonomy':                                  '#ffdd00',  // yellow
+  'Fear':                                      '#cc4400',  // blood orange
+  'The Erotic':                                '#4488ff',  // blue
+  'Crossing of Boundaries & Diversification':  '#44cc88',  // green
+  'Interpersonality':                          '#aa88ff',  // lavender
 };
 
 const ORBIT_PLANETS = [
@@ -776,7 +792,7 @@ const ORBIT_PLANETS = [
     label: "Briggs", color: "#ff7788", size: 8,
     belt: "Theory", beltColor: "#ff7755",
     toxicity: 3, gravity: 8,
-    throughlines: ['Institutionality','Social norms','Autonomy','Fear','Crossing of boundaries/Diversification'],
+    throughlines: ['Institutionality','Social Norms','Autonomy','Fear','Crossing of Boundaries & Diversification'],
     tooltip: "Dr. Ray Briggs — Theory · Philosophy · Podcast",
     detail: {
       title: "Dr. Ray Briggs",
@@ -791,7 +807,7 @@ const ORBIT_PLANETS = [
     label: "Flatley", color: "#f088d0", size: 8,
     belt: "Theory", beltColor: "#ff7755",
     toxicity: 7, gravity: 2,
-    throughlines: ['Social norms','Crossing of boundaries/Diversification'],
+    throughlines: ['Social Norms','Crossing of Boundaries & Diversification'],
     tooltip: "Dr. Johnathan Flatley — Theory · Comparatism · Art History",
     detail: {
       title: "Dr. Johnathan Flatley",
@@ -806,7 +822,7 @@ const ORBIT_PLANETS = [
     label: "Parsard", color: "#50dde8", size: 9,
     belt: "Theory", beltColor: "#ff9966",
     toxicity: 2, gravity: 5,
-    throughlines: ['Radicalization','Autonomy','Erotic'],
+    throughlines: ['Radicalization','Autonomy','The Erotic'],
     tooltip: "Dr. Kaneesha Parsard — Theory (outward-facing) · Archival Sociology",
     detail: {
       title: "Dr. Kaneesha Parsard",
@@ -815,18 +831,18 @@ const ORBIT_PLANETS = [
       image: "", link: ""
     }
   },
-  // ── idx 3 · Brusch · Week 8 (Outward-facing Scholarship) ─────
+  // ── idx 3 · Bruch · Week 8 (Outward-facing Scholarship) ─────
   {
     orbitFrac: 0.27, speed: 0.055, angle0: 0.91,
-    label: "Brusch", color: "#55e8a0", size: 10,
-    belt: "Outward-facing Scholarship", beltColor: "#ffe090",
+    label: "Bruch", color: "#55e8a0", size: 10,
+    belt: "Outward-Facing Scholarship", beltColor: "#ffe090",
     toxicity: 8, gravity: 3,
     throughlines: ['Institutionality','Autonomy'],
-    tooltip: "Dr. Joeseph Dov Brusch — Outward-facing Scholarship · Public Health · Quantitative Research",
+    tooltip: "Dr. Joseph Dov Bruch — Outward-Facing Scholarship · Public Health · Quantitative Research",
     detail: {
-      title: "Dr. Joeseph Dov Brusch",
-      body: "Week 8 | May 12\n\nThermal Zone: Outward-facing Scholarship\n\nMethodologies (Moons): Public Health · Quantitative Research",
-      analysis: "Dr. Brusch brought our attention to a commonly discussed issue within the world of gender and sexuality\u2014women\u2019s healthcare\u2014from a new perspective that placed these issues within a financial frame. While we appreciated that his work challenges perceptions about capitalism, privacy, private equity and VC, and tech in healthcare, we were disappointed in the overall execution. He did not discuss specifics or present in-depth explanations of potential harms and critiques. Specifically, he left out the potential femtech has to widen gaps in healthcare access between White women and women of color. He also only touched minimally on the day-to-day experiences of the women using femtech. When we tried to delve deeper into these issues, we felt he redirected questions at us rather than considering how our perspectives could be incorporated.",
+      title: "Dr. Joseph Dov Bruch",
+      body: "Week 8 | May 12\n\nThermal Zone: Outward-Facing Scholarship\n\nMethodologies (Moons): Public Health · Quantitative Research",
+      analysis: "Dr. Bruch brought our attention to a commonly discussed issue within the world of gender and sexuality\u2014women\u2019s healthcare\u2014from a new perspective that placed these issues within a financial frame. While we appreciated that his work challenges perceptions about capitalism, privacy, private equity and VC, and tech in healthcare, we were disappointed in the overall execution. He did not discuss specifics or present in-depth explanations of potential harms and critiques. Specifically, he left out the potential femtech has to widen gaps in healthcare access between White women and women of color. He also only touched minimally on the day-to-day experiences of the women using femtech. When we tried to delve deeper into these issues, we felt he redirected questions at us rather than considering how our perspectives could be incorporated.",
       image: "", link: ""
     }
   },
@@ -834,13 +850,13 @@ const ORBIT_PLANETS = [
   {
     orbitFrac: 0.31, speed: 0.042, angle0: 3.31,
     label: "Schilt", color: "#7eb8f7", size: 10,
-    belt: "Scholarship · Practice", beltColor: "#aad880",
+    belt: "Outward-Facing Scholarship · Practice", beltColor: "#aad880",
     toxicity: 3, gravity: 6,
-    throughlines: ['Institutionality','Social norms','Autonomy','Fear','Crossing of boundaries/Diversification','Interpersonality'],
-    tooltip: "Dr. Kristen Schilt — Outward-facing Scholarship · Practice",
+    throughlines: ['Institutionality','Social Norms','Autonomy','Fear','Crossing of Boundaries & Diversification','Interpersonality'],
+    tooltip: "Dr. Kristen Schilt — Outward-Facing Scholarship · Practice",
     detail: {
       title: "Dr. Kristen Schilt",
-      body: "Week 4 | April 14\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): Documentary · Research · Semi-structured Interviews · Sociology",
+      body: "Week 4 | April 14\n\nThermal Zone: Outward-Facing Scholarship · Practice\n\nMethodologies (Moons): Documentary · Research · Semi-structured Interviews · Sociology",
       analysis: "Overall we appreciated Dr. Schilt\u2019s focus on the trans community and the ways in which their daily lives are affected because their identities do not fit conventional social norms, and we appreciated that Dr. Schilt took the time to engage individually with people. We also appreciated that Dr. Schilt\u2019s work extended to archival research that exposed information that many people do not know exists, as well as demonstrated the humanity in each individual affected by our discourse. We were disappointed, however, that only trans men were interviewed and that there was a lack of racial diversity among the interviewees.",
       image: "", link: ""
     }
@@ -849,13 +865,13 @@ const ORBIT_PLANETS = [
   {
     orbitFrac: 0.35, speed: 0.033, angle0: 5.71,
     label: "Tremmel", color: "#ffaa55", size: 10,
-    belt: "Scholarship · Practice", beltColor: "#aad880",
+    belt: "Outward-Facing Scholarship · Practice", beltColor: "#aad880",
     toxicity: 1, gravity: 6,
-    throughlines: ['Radicalization','Autonomy','Fear','Erotic','Crossing of boundaries/Diversification'],
-    tooltip: "Dr. Red Vaughan Tremmel — Outward-facing Scholarship · Practice",
+    throughlines: ['Radicalization','Autonomy','Fear','The Erotic','Crossing of Boundaries & Diversification'],
+    tooltip: "Dr. Red Vaughan Tremmel — Outward-Facing Scholarship · Practice",
     detail: {
       title: "Dr. Red Vaughan Tremmel",
-      body: "Week 1 | March 24\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): History · Documentary · Interviews",
+      body: "Week 1 | March 24\n\nThermal Zone: Outward-Facing Scholarship · Practice\n\nMethodologies (Moons): History · Documentary · Interviews",
       analysis: "We felt that, given Dr. Tremmel\u2019s focus on Burlesque dancers at Exotic World, the documentary was thoughtfully executed in its attentiveness to the interviewees and the selection of diverse perspectives. We appreciated the choice to center the dancers and their storytelling in driving the documentary\u2019s direction with limited third-party narration. We felt that the topic of the documentary inherently challenged existing social structures by focusing on individuals and labor that are often overlooked, marginalized, and demonized within society.",
       image: "", link: ""
     }
@@ -864,13 +880,13 @@ const ORBIT_PLANETS = [
   {
     orbitFrac: 0.39, speed: 0.026, angle0: 2.13,
     label: "Moore", color: "#ffd055", size: 11,
-    belt: "Scholarship · Practice", beltColor: "#aad880",
+    belt: "Outward-Facing Scholarship · Practice", beltColor: "#aad880",
     toxicity: 1, gravity: 5,
-    throughlines: ['Institutionality','Social norms','Fear','Crossing of boundaries/Diversification'],
-    tooltip: "Dr. Lisa Moore — Outward-facing Scholarship · Practice",
+    throughlines: ['Institutionality','Social Norms','Fear','Crossing of Boundaries & Diversification'],
+    tooltip: "Dr. Lisa Moore — Outward-Facing Scholarship · Practice",
     detail: {
       title: "Dr. Lisa Moore",
-      body: "Week 7 | May 5\n\nThermal Zone: Outward-facing Scholarship · Practice\n\nMethodologies (Moons): Ethnography · Blog · Social Work · Consulting",
+      body: "Week 7 | May 5\n\nThermal Zone: Outward-Facing Scholarship · Practice\n\nMethodologies (Moons): Ethnography · Blog · Social Work · Consulting",
       analysis: "We appreciated Dr. Moore\u2019s presentation and work itself because of its wide-reaching quality and integration of critical perspectives. Her work includes recognition of some radical-leaning ideas that challenge conventional expectations of Black women, and she did so at multiple levels: institutionally and personally. She also worked to address many of the issues faced in the queer community at their roots by directly disrupting the cycle of disconnect between generations.",
       image: "", link: ""
     }
@@ -881,7 +897,7 @@ const ORBIT_PLANETS = [
     label: "Abdelhadi", color: "#b080f0", size: 12,
     belt: "Theory · Practice", beltColor: "#cc88ff",
     toxicity: 3, gravity: 10,
-    throughlines: ['Social norms','Autonomy','Fear','Crossing of boundaries/Diversification'],
+    throughlines: ['Social Norms','Autonomy','Fear','Crossing of Boundaries & Diversification'],
     tooltip: "Dr. Eman Abdelhadi — Theory · Practice · Interviews · Organizing",
     detail: {
       title: "Dr. Eman Abdelhadi",
@@ -910,7 +926,7 @@ const MOONS = [
   { planetIdx: 1, r: 28, speed: 0.45, angle0: 3.6, size: 4, color: '#e880d8', label: 'Art History'         },
   // Parsard (2): archival sociology
   { planetIdx: 2, r: 20, speed: 0.70, angle0: 1.0, size: 4, color: '#70d8f0', label: 'Archival Sociology'  },
-  // Brusch (3): public health · quantitative research
+  // Bruch (3): public health · quantitative research
   { planetIdx: 3, r: 18, speed: 0.65, angle0: 1.5, size: 4, color: '#80ffcc', label: 'Public Health'       },
   { planetIdx: 3, r: 28, speed: 0.45, angle0: 4.0, size: 4, color: '#ff9966', label: 'Quantitative Research'},
   // Schilt (4): documentary · research · semi-structured interviews · sociology
@@ -945,7 +961,7 @@ const HIDDEN_NODES = [
   { x: 88, y: 12,
     label: "Black Hole", color: "#9955ff", size: 44,
     isBlackHole: true,
-    tooltip: "Where gravity is so strong not even light can escape",
+    tooltip: "Hegemonic Systems — dominant forces that attempt to consume or regulate discourse",
     detail: {
       title: "Hegemonic Systems (Black Hole)",
       body: "The black hole in this galaxy represents the hegemonic systems that pull against the universe, attempting to consume or regulate discourse in opposition to the gravitational pull of the sun (representing gender and sexuality).",
@@ -1551,12 +1567,12 @@ function openModal(n) {
       const gravColor = `hsl(${260 + n.gravity * 4}, 75%, 65%)`;
       html += `<div class="modal-section"><span class="modal-section-label">Scores</span>
         <div class="score-row">
-          <span class="score-label">Toxicity Score <span class="score-hint" data-tip="Measures how hostile or exclusionary the scholarly environment can be. Lower scores indicate more welcoming, livable academic spaces.">?</span></span>
+          <span class="score-label">Toxicity Score <span class="score-hint" data-tip="Measures how hostile or exclusionary the environment can be. Lower scores indicate more welcoming, livable spaces.">?</span></span>
           <div class="score-track"><div class="score-fill" style="width:${toxPct}%;background:${toxColor}"></div></div>
           <span class="score-num">${n.toxicity}/10</span>
         </div>
         <div class="score-row">
-          <span class="score-label">Gravitational Pull <span class="score-hint" data-tip="Reflects the ideological pull of this scholarship — how forcefully it challenges dominant norms. Higher scores signal more radical, transformative work.">?</span></span>
+          <span class="score-label">Gravitational Pull <span class="score-hint" data-tip="Reflects the ideology motivating this professor's work—a scale that measures work in relation to existing systems. Lower scores signal liberal work that operates within existing systems and higher scores signal more radical work that seeks to bring down systems entirely.">?</span></span>
           <div class="score-track"><div class="score-fill" style="width:${gravPct}%;background:${gravColor}"></div></div>
           <span class="score-num">${n.gravity}/10</span>
         </div>
